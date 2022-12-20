@@ -1,0 +1,12 @@
+---
+servers:
+  hosts:
+    malinka:
+      ansible_host: 192.168.88.35
+
+workstation:
+  hosts:
+    localhost:
+      ansible_connection: local
+      ansible_become: false
+    

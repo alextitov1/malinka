@@ -1,0 +1,7 @@
+---
+- name: My ping play
+  become: true
+  hosts: servers
+  tasks:
+    - name: Ping pong
+      ansible.builtin.ping:

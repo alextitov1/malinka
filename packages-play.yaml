@@ -1,0 +1,16 @@
+---
+- name: Install packages
+  become: true
+  hosts: servers
+  gather_facts: true
+  vars:
+    packages:
+      - zsh
+      - podman
+  tasks:
+    - name: Install packages
+      ansible.builtin.package:
+        name: "{{ item }}"
+        state: present
+      loop: "{{ packages }}"
+      when: ansible_facts['distribution'] == "Debian"

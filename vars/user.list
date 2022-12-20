@@ -1,0 +1,9 @@
+users:
+  - name: transmission
+    uid: 2002
+  - name: jackett
+    uid: 2003
+  - name: sonarr
+    uid: 2004
+  - name: radarr
+    uid: 2005

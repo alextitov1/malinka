@@ -1,0 +1,27 @@
+---
+- name: Create groups play
+  become: true
+  hosts: servers
+  tasks:
+    - name: Create group mediaservers
+      ansible.builtin.group:
+        name: mediaservers
+        gid: 2000
+        state: present
+
+- name: Create users
+  become: true
+  hosts: servers
+  vars_files:
+    - vars/user.list
+  tasks:
+    - name: Create user transmission
+      ansible.builtin.user:
+        name: "{{ item.name }}"
+        uid: "{{ item.uid }}"
+        state: present
+        shell: "/sbin/nologin"
+        append: true
+        groups:
+          - mediaservers
+      loop: "{{ users }}"

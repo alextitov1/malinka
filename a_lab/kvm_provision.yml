@@ -1,0 +1,24 @@
+- name: Deploys VM based on cloud image
+  hosts: localhost
+  vars:
+    pool_dir: "/home/alexander/VMs"
+    vm: f34-lab01
+    vcpus: 1
+    ram_mb: 1024
+    cleanup: false
+    net: default
+    ssh_pub_key: "/home/alexander/.ssh/id_rsa.pub"
+
+  tasks:
+    - name: KVM Provision role
+      ansible.builtin.include_role:
+        name: kvm_provision
+      vars:
+        libvirt_pool_dir: "{{ pool_dir }}"
+        vm_name: "{{ vm }}"
+        vm_vcpus: "{{ vcpus }}"
+        vm_ram_mb: "{{ ram_mb }}"
+        vm_net: "{{ net }}"
+        cleanup_tmp: "{{ cleanup }}"
+        ssh_key: "{{ ssh_pub_key }}"
+        vm_image: fedora34

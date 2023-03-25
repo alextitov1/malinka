@@ -7,5 +7,5 @@
         path: /mnt/ssd01/
         src: UUID=67FE-BEA0
         fstype: exfat
-        opts: rw,uid=2000,gid=2000,umask=0007
-        state: present
+        opts: rw,uid=2001,gid=2000,umask=0002
+        state: mounted

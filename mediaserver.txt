@@ -1,0 +1,109 @@
+UUID="67FE-BEA0" BLOCK_SIZE="512" TYPE="exfat" PTTYPE="dos" PARTLABEL="Basic data partition" PARTUUID="a39d745b-d20a-4337-b410-a1ddf4c2e2b7"
+
+/mnt/ssd01 mnt-ssd01.mount
+
+
+podman run -d \
+  --name=transmission \
+  -e PUID=2001 \
+  -e PGID=2001 \
+  -e TZ=Pacific/Auckland \
+  -p 9091:9091 \
+  -p 51413:51413 \
+  -p 51413:51413/udp \
+  -v /var/mediaservers/transmission/config:/config \
+  -v /mnt/ssd01/mediaservers:/downloads \
+  -v /var/mediaservers/transmission/watch:/watch \
+  --restart unless-stopped \
+  lscr.io/linuxserver/transmission:latest
+
+### SAMBA ###
+podman run -it --name samba -p 139:139 -p 445:445 \
+            -v /mnt/ssd01:/mount \
+            -e USERID=2001 \
+            -e GROUPID=2001 \
+            -d registry.hub.docker.com/dperson/samba -p \
+            -s "public;/mount"
+
+######## SONNAR #####
+http://192.168.88.42:8989
+
+podman run -d \
+  --name=sonarr \
+  -e PUID=2004 \
+  -e PGID=2004 \
+  -e TZ=Pacific/Auckland \
+  -p 8989:8989 \
+  -v /var/mediaservers/sonarr/config:/config \
+  -v /mnt/ssd01/mediaservers/tvseries:/tv `#optional` \
+  -v /mnt/ssd01/mediaservers/complete:/downloads `#optional` \
+  --restart unless-stopped \
+  lscr.io/linuxserver/sonarr:latest
+
+useradd -s /usr/sbin/nologin --uid 2004 -G mediaservers sonarr
+mkdir -pv /var/mediaservers/sonarr
+cp -R /mnt/ssd01/sonarr/data /var/mediaservers/sonarr/config
+chown -R sonarr:sonarr /var/mediaservers/sonarr
+
+
+podman generate systemd 
+#######################
+http://192.168.88.42:7878
+
+####RADARR######
+podman run -d \
+  --name=radarr \
+  -e PUID=2005 \
+  -e PGID=2005 \
+  -e TZ=Europe/London \
+  -p 7878:7878 \
+  -v /var/mediaservers/radarr/config:/config \
+  -v /mnt/ssd01/mediaservers/movies:/movies `#optional` \
+  -v /mnt/ssd01/mediaservers/complete:/downloads `#optional` \
+  --restart unless-stopped \
+  lscr.io/linuxserver/radarr:latest
+
+
+useradd -s /usr/sbin/nologin --uid 2005 -G mediaservers radarr
+mkdir -pv /var/mediaservers/radarr
+
+chown -R radarr:radarr /var/mediaservers/radarr
+##########
+
+########### JACKETT ##########
+http://192.168.88.42:9117/UI/Dashboard
+
+podman run -d \
+  --name=jackett \
+  -e PUID=2003 \
+  -e PGID=2003 \
+  -e TZ=Pacific/Auckland \
+  -e AUTO_UPDATE=true `#optional` \
+  -p 9117:9117 \
+  -v /var/mediaservers/jackett/config:/config \
+  -v /var/mediaservers/transmission/watch:/downloads \
+  --restart unless-stopped \
+  lscr.io/linuxserver/jackett:latest
+
+useradd -s /usr/sbin/nologin --uid 2003 -G mediaservers jackett
+mkdir -pv /var/mediaservers/jackett
+cp -R /mnt/ssd01/jackett/config /var/mediaservers/jackett
+chown -R jackett:jackett /var/mediaservers/jackett
+
+######################3
+
+
+
+groupadd --gid 2000 mediaservers
+useradd -s /usr/sbin/nologin --uid 2001 -G mediaservers samba
+
+useradd -s /usr/sbin/nologin --uid 2002 -G mediaservers trnsmssn
+mkdir -pv /var/mediaservers/transmission/{config,watch}
+chown -R trnsmssn:trnsmssn /var/mediaservers/transmission/config
+
+
+
+
+
+
+

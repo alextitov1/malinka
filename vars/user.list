@@ -1,4 +1,6 @@
 users:
+  - name: samba
+    uid: 2001
   - name: transmission
     uid: 2002
   - name: jackett

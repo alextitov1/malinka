@@ -15,37 +15,37 @@
   register: existing_vms
   changed_when: false
 
-- name: Create VM if not existsan
+- name: Create VM if not exist
   block:
-  - name: Download base image
-    ansible.builtin.get_url:
-      url: "{{ base_image_url }}"
-      dest: "/tmp/{{ base_image_name }}"
-      checksum: "sha256:{{ base_image_sha }}"
+    - name: Download base image
+      ansible.builtin.get_url:
+        url: "{{ base_image_url }}"
+        dest: "/tmp/{{ base_image_name }}"
+        checksum: "sha256:{{ base_image_sha }}"
 
-  - name: Copy base image to libvirt directory
-    ansible.builtin.copy:
-      dest: "{{ libvirt_pool_dir }}/{{ vm_name }}.qcow2"
-      src: "/tmp/{{ base_image_name }}"
-      force: false
-      remote_src: true
-      mode: 0660
-    register: copy_results
+    - name: Copy base image to libvirt directory
+      ansible.builtin.copy:
+        dest: "{{ libvirt_pool_dir }}/{{ vm_name }}.qcow2"
+        src: "/tmp/{{ base_image_name }}"
+        force: false
+        remote_src: true
+        mode: 0660
+      register: copy_results
 
-  - name: Configure the image
-    ansible.builtin.command: |
-      virt-customize -a {{ libvirt_pool_dir }}/{{ vm_name }}.qcow2 \
-      --hostname {{ vm_name }} \
-      --root-password password:{{ vm_root_pass }} \
-      --ssh-inject 'root:file:{{ ssh_key }}' \
-      --uninstall cloud-init --selinux-relabel
-    when: copy_results is changed
+    - name: Configure the image
+      ansible.builtin.command: |
+        virt-customize -a {{ libvirt_pool_dir }}/{{ vm_name }}.qcow2 \
+        --hostname {{ vm_name }} \
+        --root-password password:{{ vm_root_pass }} \
+        --ssh-inject 'root:file:{{ ssh_key }}' \
+        --uninstall cloud-init --selinux-relabel
+      when: copy_results is changed
 
-  - name: Define vm
-    community.libvirt.virt:
-      command: define
-      xml: "{{ lookup('template', 'vm-template.xml.j2') }}"
-      uri: "{{ qemu_uri }}"
+    - name: Define vm
+      community.libvirt.virt:
+        command: define
+        xml: "{{ lookup('template', 'vm-template.xml.j2') }}"
+        uri: "{{ qemu_uri }}"
   when: "vm_name not in existing_vms.list_vms"
 
 - name: Ensure VM is started

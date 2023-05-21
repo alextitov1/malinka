@@ -1,24 +1,42 @@
+---
 - name: Deploys VM based on cloud image
   hosts: localhost
+  vars_files: images.yml
+  become: true
   vars:
     pool_dir: "/home/alexander/VMs"
-    vm: f34-lab01
     vcpus: 1
     ram_mb: 1024
     cleanup: false
-    net: default
+    net: home.lab
+    net_type: network
     ssh_pub_key: "/home/alexander/.ssh/id_rsa.pub"
+    qemu_uri: qemu:///system
+    my_lab:
+      # - vm_name: fedora-01
+      #   vm_ram_mb: 1024
+      #   vm_image: fedora34
+      - vm_name: fedora-02
+        vm_ram_mb: 1024
+        vm_image: fedora37
+      - vm_name: alma9-03
+        vm_image: alma9
 
   tasks:
     - name: KVM Provision role
+      loop: "{{ my_lab }}"
       ansible.builtin.include_role:
         name: kvm_provision
       vars:
         libvirt_pool_dir: "{{ pool_dir }}"
-        vm_name: "{{ vm }}"
+        vm_name: "{{ item['vm_name'] }}"
         vm_vcpus: "{{ vcpus }}"
         vm_ram_mb: "{{ ram_mb }}"
         vm_net: "{{ net }}"
+        vm_net_type: "{{ net_type }}"
         cleanup_tmp: "{{ cleanup }}"
         ssh_key: "{{ ssh_pub_key }}"
-        vm_image: fedora34
+        image: "{{ images[item['vm_image']] }}"
+        base_image_name: "{{ image['base_image_name'] }}"
+        base_image_url: "{{ images[item['vm_image']]['base_image_url'] }}{{ base_image_name }}"
+        base_image_sha: "{{ images[item['vm_image']]['base_image_sha'] }}"

@@ -1,0 +1,15 @@
+---
+- hosts: '{{ host | default("raspberries") }}'
+  name: Temp name
+  vars:
+    plays_dir: "{{ playbook_dir }}/plays"
+  tasks:
+
+    - name: "Import setup-play.yml"
+      ansible.builtin.import_tasks: "{{ plays_dir }}/setup-tasks.yml"
+      tags: ['setup']
+
+    - name: "Configure ssd storage"
+      ansible.builtin.import_tasks:
+        file: "{{ plays_dir }}/conf_ssd-tasks.yml"
+      tags: ['storage']

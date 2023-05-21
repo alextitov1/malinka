@@ -1,0 +1,19 @@
+storage_pools:
+  - name: vg_ssd
+    disks: [sda]
+    volumes:
+      - name: shared
+        size: "180 GiB"
+        mount_point: /mnt/shared
+        state: present
+        fs_type: xfs
+      - name: containers
+        size: "20 GiB"
+        mount_point: /mnt/containers
+        state: present
+        fs_type: xfs
+      - name: app_data
+        size: "2 GiB"
+        mount_point: /mnt/app_data
+        state: present
+        fs_type: xfs

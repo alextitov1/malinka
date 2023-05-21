@@ -1,0 +1,23 @@
+---
+- name: Rename host to the inventory name
+  ansible.builtin.hostname:
+    name: '{{ inventory_hostname }}'
+    use: systemd
+
+- name: Update all packages
+  ansible.builtin.dnf:
+    name: '*'
+    state: latest
+    update_only: true # <- Updates but does not install additional packages.
+    update_cache: true
+
+- name: Install common packages
+  ansible.builtin.dnf:
+    name: "{{ common_packages }}"
+    state: present
+
+- name: Install node specific packages
+  ansible.builtin.dnf:
+    name: "{{ node_specific_packages }}"
+    state: present
+  when: node_specific_packages is defined

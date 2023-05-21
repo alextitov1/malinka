@@ -1,0 +1,31 @@
+# ---
+# - name: Get missing images
+#   vars_files: images.yml
+#   gather_facts: false
+#   hosts: localhost
+#   vars:
+#     my_lab:
+#       - vm_name: fedora-01
+#         vm_ram_mb: 1024
+#         vm_image: fedora34
+#       - vm_name: fedora-02
+#         vm_ram_mb: 1024
+#         vm_image: fedora37
+  
+#   tasks:
+#     # - name: Debug
+#     #   ansible.builtin.debug:
+#     #     msg: "{{ my_lab }}"
+    
+#     # - name: Loop Debug
+#     #   loop: "{{ my_lab }}"
+#     #   ansible.builtin.debug:
+#     #     msg: "{{ images[item['vm_image']]['base_image_url'] }}{{ images[item['vm_image']]['base_image_name'] }}"
+
+#     - name: Create VM if doesn't exists
+#       loop: "{{ my_lab }}"
+#       ansible.builtin.get_url:
+#         url: "{{ images[item['vm_image']]['base_image_url'] }}{{ images[item['vm_image']]['base_image_name'] }}"
+#         dest: "/tmp/{{ images[item['vm_image']]['base_image_name'] }}"
+#         checksum: "sha256:{{ images[item['vm_image']]['base_image_sha'] }}"
+#         mode: 0644

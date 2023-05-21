@@ -1,0 +1,12 @@
+storage_pools:
+  - name: vg_ssd
+    disks: [sda]
+    volumes:
+      - name: containers
+        size: "15 GiB"
+        mount_point: /var/lib/containers
+        state: present
+        fs_type: xfs
+
+node_specific_packages:
+  - podman

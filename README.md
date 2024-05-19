@@ -1,5 +1,11 @@
 # init setup
 
+## SSD-USB
+mount options
+```sh
+UUID=c1eb2700-2c4b-40d2-9617-dbe54ec2e3c5 /media/pi/Seagate3TB ext4 auto,nofail,noatime,users,rw 0 0
+```
+
 ## nmcli
 
 ```sh

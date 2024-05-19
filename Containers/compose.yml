@@ -13,9 +13,17 @@ services:
       # - PEERPORT= #optional
       # - HOST_WHITELIST= #optional
     volumes:
-      - ${media_dir}/config:/config:z
-      - ${media_dir}:/downloads:z
-      - ${media_dir}/watch:/watch:z
+      # - ${media_dir}/transmission_config:/config:z
+      - type: volume
+        source: transmission-vol
+        target: /config
+      
+      - type: bind
+        source: ${working_dir}/transmission_conf/settings.json
+        target: /config/settings.json
+        options: z
+      - ${media_dir}:/media:z
+      # - ${media_dir}/watch:/watch:z
     ports:
       - 9091:9091
       - 51413:51413
@@ -24,39 +32,42 @@ services:
     networks:
       - app-net
 
-  jackett:
-    image: lscr.io/linuxserver/jackett:latest
-    container_name: jackett
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
-      - AUTO_UPDATE=true #optional
-      - RUN_OPTS= #optional
-    volumes:
-      - jackett-vol:/config
-      - ${media_dir}/watch:/downloads:z
-    ports:
-      - 9117:9117
-    restart: unless-stopped
-    networks:
-      - app-net
+  # jackett:
+  #   image: lscr.io/linuxserver/jackett:latest
+  #   container_name: jackett
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=Etc/UTC
+  #     - AUTO_UPDATE=true #optional
+  #     - RUN_OPTS= #optional
+  #   volumes:
+  #     - jackett-vol:/config
+  #     - ${media_dir}/watch:/downloads:z
+  #   ports:
+  #     - 9117:9117
+  #   restart: unless-stopped
+  #   networks:
+  #     - app-net
   
   samba:
     image: docker.io/dperson/samba:latest
     container_name: samba
     # command: -u "blomerus;${ADMIN_PASSWORD}" -s "media;/share;yes;no;no;blomerus" -s "public;/public;yes;no;yes"
-    command: -s "public;/public;yes;no;yes"
+    # command: -u "alex;${ADMIN_PASSWORD}" #-s "torrents;/torrents;yes;yes;yes" -s "watch;/watch;yes;no;no;alex"
     volumes:
       # - ${DATA_DIR}:/share
       # - ${DATA_DIR}/public:/public
-      - ${media_dir}/watch:/share:z
-      - ${media_dir}:/public:z
+      # - ${media_dir}/watch:/watch:z
+      - ${media_dir}:/torrents:z
     environment:
       - TZ=Etc/UTC
       - WORKGROUP=malinka.lan
       - USERID=1000
       - GROUPID=1000
+      - SHARE1=torrents;/torrents;yes;yes;yes
+      - SHARE2=admin;/torrents;yes;no;no;alex
+      - USER1=alex;${ADMIN_PASSWORD}
     ports:
       - 139:139
       - 445:445
@@ -69,4 +80,7 @@ networks:
   app-net: {}
 
 volumes:
-  jackett-vol: {}
+  transmission-vol:
+    name: transmission-config
+  jackett-vol:
+    name: jackett-config

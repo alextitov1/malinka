@@ -1,10 +1,8 @@
 ---
 raspberries:
   hosts:
-    malinka1:
-      ansible_host: 192.168.88.5
     malinka2:
-      ansible_host: 192.168.88.6
+      ansible_host: malinka2.lan
 
 workstation:
   hosts:

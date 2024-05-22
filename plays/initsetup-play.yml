@@ -1,11 +1,10 @@
 ---
 - name: Initial Ansible node setup
   hosts: '{{ host | default("raspberries") }}'
-  become: false
   gather_facts: false
   vars_files:
     - ../vars/secrets.yml
-  remote_user: root
+  
   tasks:
     - name: Create ansible user
       ansible.builtin.user:

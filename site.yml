@@ -1,6 +1,5 @@
 ---
 - hosts: '{{ host | default("raspberries") }}'
-  name: Temp name
   vars:
     plays_dir: "{{ playbook_dir }}/plays"
   tasks:

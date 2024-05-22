@@ -1,0 +1,8 @@
+---
+# collections:
+#   - name: fedora.linux_system_roles
+#   - name: ansible-posix
+roles:
+  - src: https://github.com/linux-system-roles/storage.git
+    scm: git
+    # version: main

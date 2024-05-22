@@ -1,5 +1,35 @@
 # init setup
 
+## Setup a control node
+
+'''
+ansible-galaxy role install -r requirements-rhel.yml
+'''
+
+## Setup a managed node
+run init.sh to setup and ansible user and ssh key on a new host
+
+```sh
+. ./init.sh malinka1
+```
+
+## Start a media server
+
+Prepare a host
+```
+ansible-playbook -e host=malinka2 plays/media-server-config.yml
+```
+
+Up podman-compose
+```
+cd /home/4esnok/gitrepos/malinka/Containers
+sudo podman-compose up -d
+```
+
+
+
+# Repo notes
+
 ## SSD-USB
 
 performace test
@@ -26,13 +56,19 @@ usb-storage.quirks=7825:a2a4:u console=tt....
 
 ```
 
+## Clean up partition table
 
-mount options
+```sh
+wipefs -a /dev/sda
+```
+
+
+## mount options
 ```sh
 UUID=c1eb2700-2c4b-40d2-9617-dbe54ec2e3c5 /media/pi/Seagate3TB ext4 auto,nofail,noatime,users,rw 0 0
 ```
 
-## nmcli
+## Alma wifi connect to Wi-Fi
 
 ```sh
 nmcli radio wifi
@@ -43,23 +79,3 @@ nmcli --ask dev wifi connect network-ssid
 nmcli connection show
 ```
 
-run init.sh to setup and ansible user and ssh key on a new host
-
-```sh
-. ./init.sh malinka1
-```
-
-# setup
-
-perform a general setup of the host
-* rename the host to a ansible node name
-* install packages
-* setup ntp
-
-# notes
-
-Clean up partition table
-
-```sh
-wipefs -a /dev/sda
-```

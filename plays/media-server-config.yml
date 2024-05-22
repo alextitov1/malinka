@@ -1,0 +1,44 @@
+---
+- name: Media server setup
+  hosts: "{{ host }}"
+  gather_facts: false
+
+  tasks:
+    # - name: Create torrents directory
+    #   ansible.builtin.file:
+    #     path: /mnt/media/torrents
+    #     state: directory
+    #     mode: '2775'
+    #     owner: 1000
+    #     group: 1000
+
+    - name: Install additional packages
+      ansible.builtin.dnf:
+        state: present
+        name:
+          - podman
+          - python3-pip
+
+    - name: install podman-compose from pip # Alma9 repos don't have podman-compose
+      ansible.builtin.pip:
+        name: podman-compose
+
+    # system_u:object_r:container_var_lib_t:s0
+    - name: Set SELinux labels on the container's dir
+      ansible.builtin.file:
+        path: /var/lib/containers
+        state: directory
+        setype: container_var_lib_t
+
+    - name: Configure firewall
+      ansible.posix.firewalld:
+        immediate: true
+        permanent: true
+        state: "enabled"
+        port: "{{ item }}"
+      loop:
+        - "9091/tcp"
+        - "51413/udp"
+        - "51413/tcp"
+        - "139/tcp"
+        - "445/tcp"

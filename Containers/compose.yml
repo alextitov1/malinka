@@ -6,24 +6,33 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Etc/UTC
-      # - TRANSMISSION_WEB_HOME= #optional
-      # - USER= #optional
-      # - PASS= #optional
-      # - WHITELIST= #optional
-      # - PEERPORT= #optional
-      # - HOST_WHITELIST= #optional
+
     volumes:
       # - ${media_dir}/transmission_config:/config:z
       - type: volume
         source: transmission-vol
         target: /config
-      
+
       - type: bind
         source: ${working_dir}/transmission_conf/settings.json
         target: /config/settings.json
-        options: z
-      - ${media_dir}:/media:z
-      # - ${media_dir}/watch:/watch:z
+        bind:
+          selinux: z
+
+      - type: bind
+        source: ${media_dir}
+        target: /media
+        bind:
+          selinux: z
+          create_host_path: true
+
+      - type: bind
+        source: ${media_dir}/watch
+        target: /watch
+        bind:
+          selinux: z
+          create_host_path: true
+
     ports:
       - 9091:9091
       - 51413:51413
@@ -59,14 +68,14 @@ services:
       # - ${DATA_DIR}:/share
       # - ${DATA_DIR}/public:/public
       # - ${media_dir}/watch:/watch:z
-      - ${media_dir}:/torrents:z
+      - ${media_dir}:/transmission:z
     environment:
       - TZ=Etc/UTC
       - WORKGROUP=malinka.lan
       - USERID=1000
       - GROUPID=1000
-      - SHARE1=torrents;/torrents;yes;yes;yes
-      - SHARE2=admin;/torrents;yes;no;no;alex
+      - SHARE1=transmission;/transmission;yes;yes;yes
+      - SHARE2=admin;/transmission;yes;no;no;alex
       - USER1=alex;${ADMIN_PASSWORD}
     ports:
       - 139:139
@@ -74,7 +83,6 @@ services:
     restart: unless-stopped
     networks:
       - app-net
-
 
 networks:
   app-net: {}

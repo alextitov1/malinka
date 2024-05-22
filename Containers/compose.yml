@@ -8,30 +8,33 @@ services:
       - TZ=Etc/UTC
 
     volumes:
-      # - ${media_dir}/transmission_config:/config:z
       - type: volume
         source: transmission-vol
         target: /config
 
-      - type: bind
-        source: ${working_dir}/transmission_conf/settings.json
-        target: /config/settings.json
-        bind:
-          selinux: z
+      # "selinux: z" is not implemented in podman-compose 1.0.6
+      # - type: bind
+      #   source: ${working_dir}/transmission_conf/settings.json
+      #   target: /config/settings.json
+      #   bind:
+      #     selinux: z
+      - ${working_dir}/transmission_conf/settings.json:/config/settings.json:z
 
-      - type: bind
-        source: ${media_dir}
-        target: /media
-        bind:
-          selinux: z
-          create_host_path: true
+      # - type: bind
+      #   source: ${media_dir}
+      #   target: /media
+      #   bind:
+      #     selinux: z
+      #     create_host_path: true
+      - ${media_dir}:/media:z
 
-      - type: bind
-        source: ${media_dir}/watch
-        target: /watch
-        bind:
-          selinux: z
-          create_host_path: true
+      # - type: bind
+      #   source: ${media_dir}/watch
+      #   target: /watch
+      #   bind:
+      #     selinux: z
+      #     create_host_path: true
+      - ${media_dir}/watch:/watch:z
 
     ports:
       - 9091:9091

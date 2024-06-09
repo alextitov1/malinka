@@ -26,8 +26,6 @@ cd /home/4esnok/gitrepos/malinka/Containers
 sudo podman-compose up -d
 ```
 
-
-
 # Repo notes
 
 ## SSD-USB
@@ -77,6 +75,25 @@ nmcli --ask dev wifi connect network-ssid
 
 
 nmcli connection show
+```
+# Power
+
+## Pi 5 usb-boot
+```
+to 
+/boot/firmware/config.txt
+
+add
+usb_max_current_enable=1 
+```
+
+### Pi 5 Power requirement
+```
+It's actually USB Power Delivery specification that's confusing.
+
+The Pi 5 expects 5v / 5a to enable usb boot. In USB Power Delivery, anything that goes above 3A requires a special 'e-marked' cable. Even though 5x5 is 25W, the PSU needs to support these more than 3A stuff. With most 27W PSU you'll find on the market, they will only provide up to 9V / 3A so they won't be good for the Pi.
+
+So basically check the output capabilities of the PSU before buying one. They are called PDO (Power Delivery Object) and you'll be able to see if 5v / 5a is supported or not that way.
 ```
 
 # Performance test result

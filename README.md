@@ -2,15 +2,32 @@
 
 ## Setup a control node
 
-'''
-ansible-galaxy role install -r requirements-rhel.yml
-'''
-
-## Setup a managed node
-run init.sh to setup and ansible user and ssh key on a new host
+Install ansible dependencies
 
 ```sh
-. ./init.sh malinka1
+#(optional) if id_rsa.pub isn't generated
+ssh-keygen 
+
+ansible-galaxy role install -r requirements-rhel.yaml
+ansible-galaxy collection install -r requirements-rhel.yaml
+```
+
+Install ansible-core > 2.14 on RHEL9 like systems
+```sh
+dnf install python3.12 python3.12-pip sshpass
+
+python3.12 -m pip install ansible-core passlib
+
+echo "export PATH=$HOME/.local/bin:$PATH" >> ~/.zshrc
+source ~/.zshrc
+```
+
+## Setup a managed node
+run init.sh to setup add ansible user and ssh key on a managed host
+
+```sh
+# ./init.sh <host> <user>
+. ./init.sh malinka2 almalinux
 ```
 
 ## Start a media server

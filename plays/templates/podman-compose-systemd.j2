@@ -1,0 +1,14 @@
+[Unit]
+Description=Podman servce
+
+[Service]
+Type=simple
+WorkingDirectory={{ media_dir }}/service/
+EnvironmentFile={{ media_dir }}/service/.env
+ExecStartPre={{ podman_compose_path }} --in-pod=1 --project-name=media1 up --no-start
+ExecStartPre=/bin/podman pod start pod_media1
+ExecStart={{ podman_compose_path }} wait
+ExecStop=/bin/podman pod stop pod_media1
+
+[Install]
+WantedBy=default.target

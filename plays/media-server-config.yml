@@ -2,6 +2,12 @@
 - name: Media server setup
   hosts: "{{ host }}"
   gather_facts: false
+  vars:
+    user: '1000'
+    group: '1000'
+    podman_compose_path: /usr/local/bin/podman-compose
+    media_dir: /mnt/media
+
 
   tasks:
     # - name: Create torrents directory
@@ -42,3 +48,32 @@
         - "51413/tcp"
         - "139/tcp"
         - "445/tcp"
+        - "8090/tcp"
+
+    - name: Create service dir
+      ansible.builtin.file:
+        path: "{{ media_dir }}/service"
+        state: directory
+        mode: '2775'
+        owner: "{{ user }}"
+        group: "{{ group }}"
+
+    - name: Copy config files to the service dir
+      ansible.builtin.copy:
+        src: ../Containers/
+        dest: "{{ media_dir }}/service/"
+        owner: "{{ user }}"
+        group: "{{ group }}"
+        mode: "0644"
+
+    - name: Crate systemd unit file
+      ansible.builtin.template:
+        src: templates/podman-compose-systemd.j2
+        dest: /etc/systemd/system/podman-compose@media1.service
+
+    - name: Enable and start the podman-compose service
+      ansible.builtin.systemd:
+        name: podman-compose@media1.service
+        state: started
+        enabled: yes
+        daemon_reload: true

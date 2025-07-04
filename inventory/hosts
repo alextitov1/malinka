@@ -4,6 +4,11 @@ raspberries:
     malinka2:
       ansible_host: malinka2.lan
 
+servers:
+  hosts:
+    vaio1:
+      ansible_host: vaio.lan
+
 workstation:
   hosts:
     localhost:

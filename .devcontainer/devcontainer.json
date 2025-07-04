@@ -1,3 +1,13 @@
 {
-	"image": "ghcr.io/alextitov1/almalinux9:latest"
+	"build": {
+		"dockerfile": "Containerfile"
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"redhat.ansible",
+				"streetsidesoftware.code-spell-checker"
+			]
+		}
+	}
 }

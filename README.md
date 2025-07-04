@@ -2,7 +2,11 @@
 
 ## Setup a control node
 
-Install ansible dependencies
+### Devcontainer
+Use devcontainer to setup a control node with ansible and other dependencies.
+
+### Manual setup
+Install ansible and other dependencies on a control node (e.g. your laptop)
 
 ```sh
 #(optional) if id_rsa.pub isn't generated

@@ -1,0 +1,29 @@
+FROM almalinux:9
+
+RUN dnf -y update && \
+    dnf -y install \
+        git \
+        which \
+        zsh \
+        sshpass \
+        util-linux-user && \
+        # ansible-core \
+        # ansible-collection-redhat-rhel_mgmt && \
+    dnf clean all && \
+
+    python3 -m ensurepip && \
+    python3 -m pip install ansible-core ansible-lint && \
+
+    ansible-galaxy collection install ansible.posix && \
+    # ansible-galaxy install -r requirements-rhel.yaml
+
+    # generating a ssh key pair to access managed nodes from a control node
+    /bin/ssh-keygen -q -t rsa -N '' -f /root/.ssh/id_rsa && \
+
+    chsh root -s $(which zsh) && \
+    git clone https://github.com/ohmyzsh/ohmyzsh.git /root/ohmyzsh && \
+    /root/ohmyzsh/tools/install.sh && \
+    rm -rf /root/ohmyzsh
+
+# RUN echo -e "Host *\n\tStrictHostKeyChecking no\n" >> /etc/ssh/ssh_config
+

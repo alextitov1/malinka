@@ -15,6 +15,7 @@
   ansible.builtin.dnf:
     name: "{{ common_packages }}"
     state: present
+  when: common_packages is defined
 
 - name: Install node specific packages
   ansible.builtin.dnf:

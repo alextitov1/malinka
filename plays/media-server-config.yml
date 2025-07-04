@@ -1,22 +1,23 @@
 ---
 - name: Media server setup
-  hosts: "{{ host }}"
+  hosts: "{{ host | default('localhost') }}"
   gather_facts: false
   vars:
     user: '1000'
     group: '1000'
-    podman_compose_path: /usr/local/bin/podman-compose
+    # podman_compose_path: /usr/local/bin/podman-compose
+    podman_compose_path: /bin/podman-compose
     media_dir: /mnt/media
 
 
   tasks:
-    # - name: Create torrents directory
-    #   ansible.builtin.file:
-    #     path: /mnt/media/torrents
-    #     state: directory
-    #     mode: '2775'
-    #     owner: 1000
-    #     group: 1000
+    - name: Create torrents directory
+      ansible.builtin.file:
+        path: /mnt/media/torrents
+        state: directory
+        mode: '2775'
+        owner: 1000
+        group: 1000
 
     - name: Install additional packages
       ansible.builtin.dnf:
@@ -25,9 +26,9 @@
           - podman
           - python3-pip
 
-    - name: install podman-compose from pip # Alma9 repos don't have podman-compose
-      ansible.builtin.pip:
-        name: podman-compose
+    # - name: Install podman-compose from pip  # Alma9 repos don't have podman-compose
+    #   ansible.builtin.pip:
+    #     name: podman-compose
 
     # system_u:object_r:container_var_lib_t:s0
     - name: Set SELinux labels on the container's dir
@@ -35,6 +36,13 @@
         path: /var/lib/containers
         state: directory
         setype: container_var_lib_t
+
+    # systemd can't read the environment file if it has incorrect context
+    - name: Set SELinux context for the environment file
+      ansible.builtin.file:
+        path: "{{ media_dir }}/service/.env"
+        state: file
+        setype: etc_t
 
     - name: Configure firewall
       ansible.posix.firewalld:
@@ -75,5 +83,5 @@
       ansible.builtin.systemd:
         name: podman-compose@media1.service
         state: started
-        enabled: yes
+        enabled: true
         daemon_reload: true

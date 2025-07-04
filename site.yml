@@ -1,5 +1,6 @@
 ---
-- hosts: '{{ host | default("raspberries") }}'
+- name: "Site playbook"
+  hosts: '{{ host | default("raspberries") }}'
   vars:
     plays_dir: "{{ playbook_dir }}/plays"
   tasks:

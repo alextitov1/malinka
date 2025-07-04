@@ -1,0 +1,18 @@
+storage_pools:
+  - name: vg_hdd
+    disks: [sda]
+    volumes:
+      - name: media
+        size: "500 GiB"
+        mount_point: /mnt/media
+        state: present
+        fs_type: xfs
+
+node_specific_packages:
+  - podman
+  # - elrepo-release
+  - podman-compose
+
+# Install EPEL on RHEL9
+# dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+# subscription-manager repos --enable codeready-builder-for-rhel-9-$(arch)-rpms

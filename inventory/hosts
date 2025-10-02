@@ -3,6 +3,8 @@ raspberries:
   hosts:
     malinka2:
       ansible_host: malinka2.lan
+    malinka3:
+      ansible_host: malinka3.lan
 
 servers:
   hosts:

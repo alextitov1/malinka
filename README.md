@@ -30,8 +30,17 @@ source ~/.zshrc
 run init.sh to setup add ansible user and ssh key on a managed host
 
 ```sh
-# ./init.sh <host> <user>
-. ./init.sh malinka2 almalinux
+# will prompt for password to decrypt vars/secret.yaml pass ~ x2
+# ./init.sh -h <host> -u <user>
+./init/run-initsetup.sh -h malinka3 -u almalinux
+```
+
+## Setup USB-SSD storage on a managed node
+
+if necessary, wipe existing partition table `wipefs -a /dev/sda`
+
+```sh
+ansible-playbook -e host=malinka3 ./init/ssdsetup-playbook.yaml
 ```
 
 ## Start a media server
@@ -41,11 +50,7 @@ Prepare a host
 ansible-playbook -e host=malinka2 plays/media-server-config.yml
 ```
 
-Up podman-compose
-```
-cd /home/4esnok/gitrepos/malinka/Containers
-sudo podman-compose up -d
-```
+
 
 # Repo notes
 

@@ -31,11 +31,11 @@
     #     name: podman-compose
 
     # system_u:object_r:container_var_lib_t:s0
-    - name: Set SELinux labels on the container's dir
-      ansible.builtin.file:
-        path: /var/lib/containers
-        state: directory
-        setype: container_var_lib_t
+    # - name: Set SELinux labels on the container's dir
+    #   ansible.builtin.file:
+    #     path: /var/lib/containers
+    #     state: directory
+    #     setype: container_var_lib_t
 
     # systemd can't read the environment file if it has incorrect context
     - name: Set SELinux context for the environment file

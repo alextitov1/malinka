@@ -1,0 +1,71 @@
+---
+- name: Initial Ansible node setup
+  hosts: '{{ host | default("raspberries") }}'
+  gather_facts: false
+
+  vars:
+    secret_file: ../vars/secrets.yaml  # <== op_sa_malinka
+    host_root_pass: >-
+      {{ lookup(
+            'community.general.onepassword',
+            inventory_hostname ~ '_root',
+            subdomain='my',
+            vault='malinka',
+            service_account_token=op_sa_malinka)
+            }}
+
+  tasks:
+      # ansible-lint throws an error if use static import with "vars_files"
+    - name: Load secret variables from file "{{ secret_file }}"
+      ansible.builtin.include_vars:
+        file: "{{ secret_file }}"
+
+    # - name: Check variables name
+    #   ansible.builtin.debug:
+    #     msg: "The password is {{ host_root_pass }}"
+
+    - name: Ensure ansible user present and configured
+      when: ansible_user != 'ansible'
+      block:
+        - name: Create ansible user
+          ansible.builtin.user:
+            name: ansible
+            comment: User to run ansible playbooks
+            shell: /bin/bash
+            state: present
+
+        - name: Allow ansible user to sudo without password
+          ansible.builtin.lineinfile:
+            dest: /etc/sudoers
+            line: 'ansible ALL=(ALL) NOPASSWD: ALL'
+            state: present
+            validate: 'visudo -cf %s'
+
+        - name: Set authorized key for ansible user
+          ansible.posix.authorized_key:
+            user: ansible
+            state: present
+            key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+    - name: Reset root password
+      ansible.builtin.user:
+        name: root
+        password: "{{ host_root_pass | password_hash('sha512', 'A1b2C3d4E5f6') }}"
+        update_password: always
+
+    # temp solution, TODO: replace with an ssh key uploaded to onepassword
+    - name: Enable SSH root login
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PermitRootLogin'
+        line: 'PermitRootLogin yes'
+        state: present
+        create: false
+        backrefs: false
+      notify: Restart sshd
+
+  handlers:
+    - name: Restart sshd
+      ansible.builtin.service:
+        name: sshd
+        state: restarted

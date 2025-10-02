@@ -2,4 +2,5 @@ venv/
 a_lab/collections/
 collections/
 roles/
-.vscode
+temp/
+.lock

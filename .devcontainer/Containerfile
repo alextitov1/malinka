@@ -1,5 +1,7 @@
 FROM almalinux:9
 
+ARG python_ver=3.12
+
 COPY requirements-rhel.yaml /tmp/requirements-rhel.yaml
 
 RUN dnf -y update && \
@@ -8,11 +10,12 @@ RUN dnf -y update && \
         which \
         zsh \
         sshpass \
+        python${python_ver} \
         util-linux-user && \
     dnf clean all && \
 
-    python3 -m ensurepip && \
-    python3 -m pip install ansible-core ansible-lint && \
+    python${python_ver} -m ensurepip && \
+    python${python_ver} -m pip install ansible-core ansible-lint passlib distlib && \
 
     ansible-galaxy role install -r /tmp/requirements-rhel.yaml && \
     ansible-galaxy collection install -r /tmp/requirements-rhel.yaml && \
@@ -25,7 +28,12 @@ RUN dnf -y update && \
     chsh root -s $(which zsh) && \
     git clone https://github.com/ohmyzsh/ohmyzsh.git /root/ohmyzsh && \
     /root/ohmyzsh/tools/install.sh && \
-    rm -rf /root/ohmyzsh
+    rm -rf /root/ohmyzsh && \
 
+    # Onepass cli
+    rpm --import https://downloads.1password.com/linux/keys/1password.asc && \
+    sh -c 'echo -e "[1password]\nname=1Password Stable Channel\nbaseurl=https://downloads.1password.com/linux/rpm/stable/\$basearch\nenabled=1\ngpgcheck=1\nrepo_gpgcheck=1\ngpgkey=\"https://downloads.1password.com/linux/keys/1password.asc\"" > /etc/yum.repos.d/1password.repo' && \
+    dnf check-update -y 1password-cli && \
+    dnf -y install 1password-cli
 # RUN echo -e "Host *\n\tStrictHostKeyChecking no\n" >> /etc/ssh/ssh_config
 

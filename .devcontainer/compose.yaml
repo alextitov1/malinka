@@ -1,0 +1,11 @@
+services:
+  devcontainer:
+    container_name: devcontainer
+    hostname: devcontainer
+    volumes:
+      - ..:/workspace:cached
+    build:
+      context: ..
+      dockerfile: .devcontainer/Containerfile
+    tty: true
+    

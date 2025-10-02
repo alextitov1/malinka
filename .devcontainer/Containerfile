@@ -1,5 +1,7 @@
 FROM almalinux:9
 
+COPY requirements-rhel.yaml /tmp/requirements-rhel.yaml
+
 RUN dnf -y update && \
     dnf -y install \
         git \
@@ -7,19 +9,19 @@ RUN dnf -y update && \
         zsh \
         sshpass \
         util-linux-user && \
-        # ansible-core \
-        # ansible-collection-redhat-rhel_mgmt && \
     dnf clean all && \
 
     python3 -m ensurepip && \
     python3 -m pip install ansible-core ansible-lint && \
 
-    ansible-galaxy collection install ansible.posix && \
-    # ansible-galaxy install -r requirements-rhel.yaml
+    ansible-galaxy role install -r /tmp/requirements-rhel.yaml && \
+    ansible-galaxy collection install -r /tmp/requirements-rhel.yaml && \
+    rm -f /tmp/requirements-rhel.yaml && \
 
     # generating a ssh key pair to access managed nodes from a control node
     /bin/ssh-keygen -q -t rsa -N '' -f /root/.ssh/id_rsa && \
 
+    # oh-my-zsh installation
     chsh root -s $(which zsh) && \
     git clone https://github.com/ohmyzsh/ohmyzsh.git /root/ohmyzsh && \
     /root/ohmyzsh/tools/install.sh && \

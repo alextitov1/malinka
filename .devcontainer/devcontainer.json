@@ -1,7 +1,12 @@
 {
-	"build": {
-		"dockerfile": "Containerfile"
-	},
+	// "build": {
+	// 	"dockerfile": "Containerfile"
+	// },
+	"dockerComposeFile": ["./compose.yaml"],
+	"service": "devcontainer",
+	"workspaceFolder": "/workspace",
+	"shutdownAction": "stopCompose",
+	
 	"customizations": {
 		"vscode": {
 			"extensions": [

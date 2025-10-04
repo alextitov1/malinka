@@ -2,6 +2,7 @@
     "ansible.python.interpreterPath": "/usr/bin/python3.12",
     "cSpell.words": [
         "initsetup",
+        "kubespray",
         "lineinfile",
         "malinka",
         "nologin",
@@ -12,6 +13,7 @@
         "sefcontext",
         "setype",
         "ssdsetup",
+        "vaio",
         "wipefs"
     ],
     "yaml.schemas": {

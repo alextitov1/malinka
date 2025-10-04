@@ -1,9 +1,8 @@
 ---
 collections:
   # - name: fedora.linux_system_roles
-  - name: ansible.posix
-  # - name: onepassword.connect
-  - name: community.general
+  # - name: ansible.posix
+  # - name: community.general
   - name: https://github.com/kubernetes-sigs/kubespray
     type: git
     version: master

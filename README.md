@@ -56,7 +56,7 @@ ansible-playbook -e host=malinka2 plays/media-server-config.yml
 
 ## SSD-USB
 
-performace test
+performance test
 ```sh
 hdparm -tT --direct /dev/sda
 ```
@@ -124,7 +124,12 @@ So basically check the output capabilities of the PSU before buying one. They ar
 
 # Performance test result
 
-## disk operations
+## Disk tests
+```sh
+the tests script 
+fio/drive_test.sh
+```
+### Results
 >Sandisk ultra 32G A1 microSD (debian, custom power)
  - Linear read: 44 Mi/s
  - Random read: 2886 IOPS
@@ -159,3 +164,10 @@ So basically check the output capabilities of the PSU before buying one. They ar
  - Linear write: 212Mi/s
  - Random write: 4597 IOPS
  - Random write single thread: 1138 IOPS
+
+>NVMe 24HY08000831  HYV256X3 (HXY) 256.06 FW APF1M3R1 (debian Pi5)
+ - Linear read: 431Mi/s
+ - Random read: 107677 IOPS
+ - Linear write: 422Mi/s
+ - Random write: 49227 IOPS
+ - Random write single thread: 978 IOPS

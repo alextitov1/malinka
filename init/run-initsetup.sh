@@ -31,7 +31,7 @@ fi
 if [ -n "$user" ]; then
     cmd_options+=" -u $user -k"
 fi
-cmd_options+=" ./initsetup-play.yaml"
+cmd_options+=" $(cd "$(dirname "$0")" && pwd)/initsetup-playbook.yaml"
 
 
 set -x

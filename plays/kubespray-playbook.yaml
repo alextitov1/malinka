@@ -1,0 +1,3 @@
+---
+- name: Call kubespray playbook from collection
+  import_playbook: kubernetes_sigs.kubespray.cluster

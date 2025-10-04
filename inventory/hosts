@@ -1,19 +1,40 @@
 ---
-raspberries:
+all:
   hosts:
+    malinka1:
+      ansible_host: malinka1.lan
     malinka2:
       ansible_host: malinka2.lan
     malinka3:
       ansible_host: malinka3.lan
+    vaio1:
+      ansible_host: vaio.lan
+    localhost:
+      ansible_connection: local
+      ansible_become: false
+raspberries:
+  hosts:
+    malinka2:
+    malinka3:
 
 servers:
   hosts:
     vaio1:
-      ansible_host: vaio.lan
 
 workstation:
   hosts:
     localhost:
-      ansible_connection: local
-      ansible_become: false
-    
+
+### kubespray groups
+kube_control_plane:
+  hosts:
+    malinka3:
+      etcd_member_name: etcd101
+
+etcd:
+  children:
+    kube_control_plane: {}
+
+kube_node:
+  hosts:
+    malinka3:

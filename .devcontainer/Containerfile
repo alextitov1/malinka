@@ -1,8 +1,10 @@
 FROM almalinux:9
 
-ARG python_ver=3.12
+ARG PYTHON_VER=3.12
 
-COPY requirements-rhel.yaml /tmp/requirements-rhel.yaml
+
+COPY ansible-galaxy-requirements.yaml /tmp/ansible-galaxy-requirements.yaml
+COPY pip-requirements.txt /tmp/pip-requirements.txt
 
 RUN dnf -y update && \
     dnf -y install \
@@ -10,16 +12,21 @@ RUN dnf -y update && \
         which \
         zsh \
         sshpass \
-        python${python_ver} \
+        python${PYTHON_VER} \
         util-linux-user && \
     dnf clean all && \
 
-    python${python_ver} -m ensurepip && \
-    python${python_ver} -m pip install ansible-core ansible-lint passlib distlib && \
+    python${PYTHON_VER} -m ensurepip && \
+    python${PYTHON_VER} -m pip install --upgrade pip && \
 
-    ansible-galaxy role install -r /tmp/requirements-rhel.yaml && \
-    ansible-galaxy collection install -r /tmp/requirements-rhel.yaml && \
-    rm -f /tmp/requirements-rhel.yaml && \
+    # install extra python packages
+    python${PYTHON_VER} -m pip install -r /tmp/pip-requirements.txt && \
+    rm -f /tmp/pip-requirements.txt && \
+
+    # installing ansible collections and roles
+    ansible-galaxy role install -r /tmp/ansible-galaxy-requirements.yaml && \
+    ansible-galaxy collection install -r /tmp/ansible-galaxy-requirements.yaml && \
+    rm -f /tmp/ansible-galaxy-requirements.yaml && \
 
     # generating a ssh key pair to access managed nodes from a control node
     /bin/ssh-keygen -q -t rsa -N '' -f /root/.ssh/id_rsa && \

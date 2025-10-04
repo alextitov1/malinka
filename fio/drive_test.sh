@@ -48,7 +48,7 @@ function perform_test {
   output=$(fio $fio_cmd)
 
   # Parse output with jq and extract desired metric
-  result=$(echo "$output" | jq ".jobs[0].${METRIC}")
+  result=$(echo "$output" | jq -r ".jobs[0].${METRIC}")
   echo "$result"
 }
 
@@ -82,7 +82,7 @@ NUMJOBS=4      # Number of jobs
 RW_TYPE="randread"
 METRIC="read.iops"
 print_parameters
-r_read_result="$(perform_test | xargs printf "%.*f\n" "$p") IOPS"
+r_read_result="$(perform_test | xargs printf "%.0f") IOPS"
 echo "   Result: $r_read_result"
 ####
 
@@ -106,19 +106,19 @@ NUMJOBS=4      # Number of jobs
 RW_TYPE="randwrite"
 METRIC="write.iops"
 print_parameters
-r_write_result="$(perform_test | xargs printf "%.*f\n" "$p") IOPS"
+r_write_result="$(perform_test | xargs printf "%.0f") IOPS"
 echo "   Result: $r_write_result"
 ####
 
 #### Random write single thread####
-echo "Random write singele thread (IOPS)"
+echo "Random write single thread (IOPS)"
 BS="4k"        # Block size
 IODEPTH=1      # IO depth
 NUMJOBS=1      # Number of jobs
 RW_TYPE="randwrite"
 METRIC="write.iops"
 print_parameters
-r_write2_result="$(perform_test | xargs printf "%.*f\n" "$p") IOPS"
+r_write2_result="$(perform_test | xargs printf "%.0f") IOPS"
 echo "   Result: $r_write2_result"
 ####
 

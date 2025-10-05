@@ -28,7 +28,7 @@ workstation:
 ### kubespray groups
 kube_control_plane:
   hosts:
-    malinka3:
+    malinka1:
       etcd_member_name: etcd101
 
 etcd:
@@ -38,3 +38,4 @@ etcd:
 kube_node:
   hosts:
     malinka3:
+    malinka1:

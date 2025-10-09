@@ -1,6 +1,8 @@
 {
     "ansible.python.interpreterPath": "/usr/bin/python3.12",
     "cSpell.words": [
+        "compinit",
+        "firewalld",
         "initsetup",
         "kubespray",
         "lineinfile",
@@ -8,11 +10,13 @@
         "nologin",
         "NOPASSWD",
         "noqa",
+        "ohmyzsh",
         "onepassword",
         "Restorecon",
         "sefcontext",
         "setype",
         "ssdsetup",
+        "sshpass",
         "vaio",
         "wipefs"
     ],

@@ -41,6 +41,20 @@ RUN dnf -y update && \
     rpm --import https://downloads.1password.com/linux/keys/1password.asc && \
     sh -c 'echo -e "[1password]\nname=1Password Stable Channel\nbaseurl=https://downloads.1password.com/linux/rpm/stable/\$basearch\nenabled=1\ngpgcheck=1\nrepo_gpgcheck=1\ngpgkey=\"https://downloads.1password.com/linux/keys/1password.asc\"" > /etc/yum.repos.d/1password.repo' && \
     dnf check-update -y 1password-cli && \
-    dnf -y install 1password-cli
-# RUN echo -e "Host *\n\tStrictHostKeyChecking no\n" >> /etc/ssh/ssh_config
+    dnf -y install 1password-cli && \
 
+    # Kubectl
+    ARCH="$(uname -m)" && \
+    case "$ARCH" in aarch64) ARCH="arm64" ;; x86_64) ARCH="amd64" ;; esac && \
+    VER=$(curl -Ls https://dl.k8s.io/release/stable.txt) && \
+    curl -L -o /usr/local/bin/kubectl "https://dl.k8s.io/release/$VER/bin/linux/$ARCH/kubectl" && \
+    chmod +x /usr/local/bin/kubectl && \
+    ## kubectl completion
+    kubectl completion zsh > /usr/share/zsh/site-functions/_kubectl && \
+    ## zsh kubectl setup
+    echo 'fpath+=/usr/share/zsh/site-functions' >> /root/.zshrc && \
+    echo 'autoload -Uz compinit && compinit' >> /root/.zshrc && \
+    echo 'alias k=kubectl' >> /root/.zshrc && \
+    echo 'compdef _kubectl k' >> /root/.zshrc
+## Set the KUBECONFIG path
+ENV KUBECONFIG=/workspace/inventory/artifacts/admin.conf

@@ -1,0 +1,109 @@
+---
+- name: Apply Cloudflare DNS records from zone files
+  hosts: localhost
+  gather_facts: false
+  vars:
+    secret_file: "{{ playbook_dir }}/../../vars/secrets.yaml"  # <== cloudflare_dns_token
+    zones_dir: "{{ playbook_dir }}/../zones"
+  tasks:
+    - name: Load secret variables from file "{{ secret_file }}"
+      ansible.builtin.include_vars:
+        file: "{{ secret_file }}"
+
+    - name: Ensure Cloudflare API token is provided
+      ansible.builtin.fail:
+        msg: "CF_API_TOKEN environment variable is not set. Export CF_API_TOKEN before running."
+      when: cloudflare_dns_token | length == 0
+
+    - name: Collect zone spec files
+      ansible.builtin.set_fact:
+        zone_files: "{{ lookup('ansible.builtin.fileglob', zones_dir ~ '/*.yaml', wantlist=True) }}"
+
+    - name: Read and parse all zone specs
+      ansible.builtin.set_fact:
+        zones_raw: []
+
+    - name: Accumulate parsed zone specs
+      ansible.builtin.set_fact:
+        zones_raw: "{{ zones_raw + [lookup('ansible.builtin.file', item) | from_yaml] }}"
+      loop: "{{ zone_files }}"
+
+    - name: Flatten zone list
+      ansible.builtin.set_fact:
+        zones: "{{ zones_raw | flatten(1) }}"
+
+    - name: Build flat list for A/AAAA/TXT records across all zones
+      ansible.builtin.set_fact:
+        flat_records_values: []
+
+    - name: Accumulate A/AAAA/TXT record sets
+      ansible.builtin.set_fact:
+        flat_records_values: "{{ flat_records_values
+          + ((item.records.A | default({})) | dict2items | map('combine', {'type': 'A', 'zone_name': item.zone_name}) | list)
+          + ((item.records.AAAA | default({})) | dict2items | map('combine', {'type': 'AAAA', 'zone_name': item.zone_name}) | list)
+          + ((item.records.TXT | default({})) | dict2items | map('combine', {'type': 'TXT', 'zone_name': item.zone_name}) | list)
+          }}"
+      loop: "{{ zones }}"
+
+    - name: Create A/AAAA/TXT records
+      community.general.cloudflare_dns:
+        zone: "{{ item.0.zone_name }}"
+        record: "{{ item.0.key }}"
+        type: "{{ item.0.type }}"
+        value: "{{ item.1 }}"
+        ttl: "{{ item.0.value.ttl | default(omit) }}"
+        proxied: "{{ item.0.value.proxied | default(omit) }}"
+        state: present
+        api_token: "{{ cloudflare_dns_token }}"
+      loop: "{{ flat_records_values | subelements('value.values', skip_missing=True) }}"
+      loop_control:
+        label: "{{ item.0.zone_name }} {{ item.0.type }} {{ item.0.key }} -> {{ item.1 }}"
+
+    - name: Build flat list for CNAME records across all zones
+      ansible.builtin.set_fact:
+        flat_cname_records: []
+
+    - name: Accumulate CNAME record sets
+      ansible.builtin.set_fact:
+        flat_cname_records: "{{ flat_cname_records
+          + ((item.records.CNAME | default({})) | dict2items | map('combine', {'type': 'CNAME', 'zone_name': item.zone_name}) | list)
+          }}"
+      loop: "{{ zones }}"
+
+    - name: Create CNAME records
+      community.general.cloudflare_dns:
+        zone: "{{ item.zone_name }}"
+        record: "{{ item.key }}"
+        type: CNAME
+        value: "{{ item.value.cname | default(item.value['cname']) }}"
+        ttl: "{{ item.value.ttl | default(omit) }}"
+        state: present
+        api_token: "{{ cloudflare_dns_token }}"
+      loop: "{{ flat_cname_records }}"
+      loop_control:
+        label: "{{ item.zone_name }} CNAME {{ item.key }} -> {{ item.value.cname }}"
+
+    - name: Build flat list for MX records across all zones
+      ansible.builtin.set_fact:
+        flat_mx_records: []
+
+    - name: Accumulate MX record sets
+      ansible.builtin.set_fact:
+        flat_mx_records: "{{ flat_mx_records
+          + ((item.records.MX | default({})) | dict2items | map('combine', {'zone_name': item.zone_name}) | list)
+          }}"
+      loop: "{{ zones }}"
+
+    - name: Create MX records
+      community.general.cloudflare_dns:
+        zone: "{{ item.0.zone_name }}"
+        record: "{{ item.0.key }}"
+        type: MX
+        value: "{{ item.1.exchange }}"
+        priority: "{{ item.1.preference | default(item.1.priority) }}"
+        ttl: "{{ item.0.value.ttl | default(omit) }}"
+        state: present
+        api_token: "{{ cloudflare_dns_token }}"
+      loop: "{{ flat_mx_records | subelements('value.mx', skip_missing=True) }}"
+      loop_control:
+        label: "{{ item.0.zone_name }} MX {{ item.0.key }} -> {{ item.1.exchange }} (prio {{ item.1.preference | default(item.1.priority) }})"

@@ -4,3 +4,4 @@ collections/
 roles/
 temp/
 .lock
+inventory/artifacts/

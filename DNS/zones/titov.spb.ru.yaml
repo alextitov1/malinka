@@ -1,0 +1,21 @@
+- zone_name: titov.spb.ru
+  records:
+    A:
+      "@":
+        values:
+          - "185.199.108.153"
+      "test":
+        values:
+          - "127.0.0.1"
+          - "127.0.0.2"
+    CNAME:
+      "cheat":
+        cname: alextitov1.github.io.
+    TXT:
+      "_github-pages-challenge-alextitov1":
+        values:
+          - "ac110200afe01008f13e1df737ee57"
+    AAAA:
+      "@":
+        values:
+          - "2606:50c0:8000::153"

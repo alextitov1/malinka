@@ -23,16 +23,24 @@
       autodiscover:
         cname: "autodiscover.outlook.com"
         ttl: 3600
-    MX:
-      "@":
-        mx:
-          - exchange: "4esnok-su.mail.protection.outlook.com"
-            preference: 0
-        ttl: 3600
+      em1019997:
+        cname: "return.smtp2go.net"
+        ttl: 600
+      s1019997._domainkey:
+        cname: "dkim.smtp2go.net"
+        ttl: 600
+      link:
+        cname: track.smtp2go.net
+        ttl: 600
+    # MX:
+    #   "@":
+    #     mx:
+    #       - exchange: "4esnok-su.mail.protection.outlook.com"
+    #         preference: 0
+    #     ttl: 3600
     TXT:
       "@":
         values:
-          - "v=spf1 include:spf.protection.outlook.com -all"
-          - "MS=ms81161978"
+          - "MS=ms16104405"
         ttl: 3600
 

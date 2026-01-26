@@ -32,15 +32,27 @@
       link:
         cname: track.smtp2go.net
         ttl: 600
-    # MX:
-    #   "@":
-    #     mx:
-    #       - exchange: "4esnok-su.mail.protection.outlook.com"
-    #         preference: 0
-    #     ttl: 3600
+      autodiscover.mail:
+        cname: "autodiscover.outlook.com"
+        ttl: 3600
+      selector1._domainkey.mail:
+        cname: "selector1-mail-4esnok-su._domainkey.4esnok.a-v1.dkim.mail.microsoft"
+        ttl: 3600
+      selector2._domainkey.mail:
+        cname: "selector2-mail-4esnok-su._domainkey.4esnok.a-v1.dkim.mail.microsoft"
+        ttl: 3600
+    MX:
+      mail:
+        mx:
+          - exchange: "mail-4esnok-su.mail.protection.outlook.com"
+            preference: 0
+        ttl: 3600
     TXT:
       "@":
         values:
           - "MS=ms16104405"
         ttl: 3600
-
+      mail:
+        values:
+          - "v=spf1 include:spf.protection.outlook.com -all"
+        ttl: 3600

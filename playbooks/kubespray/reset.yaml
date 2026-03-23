@@ -1,0 +1,5 @@
+# usage: ansible-playbook -i inventory/hosts playbooks/kubespray/reset.yml -e "reset_confirmation=yes" --limit malinka2,malinka3
+
+---
+- name: Reset Kubernetes cluster
+  import_playbook: kubernetes_sigs.kubespray.reset

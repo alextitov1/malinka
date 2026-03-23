@@ -1,4 +1,8 @@
 cluster_name: malinka-cl.lan
+kubernetes_version: v1.34.3
 
 # Make a copy of kubeconfig on the host that runs Ansible in {{ inventory_dir }}/artifacts
 kubeconfig_localhost: true
+
+# Enable strict ARP for kube-proxy to ensure proper routing of traffic to MetalLB-assigned IPs
+kube_proxy_strict_arp: true

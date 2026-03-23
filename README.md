@@ -5,35 +5,15 @@
 ### Devcontainer
 Use devcontainer to setup a control node with ansible and other dependencies.
 
-### Manual setup
-Install ansible and other dependencies on a control node (e.g. your laptop)
+## Install K8S cluster with kubespray
 
 ```sh
-#(optional) if id_rsa.pub isn't generated
-ssh-keygen 
-
-ansible-galaxy role install -r requirements-rhel.yaml
-ansible-galaxy collection install -r requirements-rhel.yaml
+ansible-playbook  playbooks/kubespray/kubespray-playbook.yaml
+## if necessary to clean up from previous installation
+ansible-playbook  playbooks/kubespray/reset.yaml
 ```
 
-Install ansible-core > 2.14 on RHEL9 like systems
-```sh
-dnf install python3.12 python3.12-pip sshpass
 
-python3.12 -m pip install ansible-core passlib
-
-echo "export PATH=$HOME/.local/bin:$PATH" >> ~/.zshrc
-source ~/.zshrc
-```
-
-## Setup a managed node
-run init.sh to setup add ansible user and ssh key on a managed host
-
-```sh
-# will prompt for password to decrypt vars/secret.yaml pass ~ x2
-# ./init.sh -h <host> -u <user>
-./init/run-initsetup.sh -h malinka3 -u almalinux
-```
 
 ## Setup USB-SSD storage on a managed node
 

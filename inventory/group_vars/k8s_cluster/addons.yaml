@@ -1,7 +1,17 @@
-# registry_disk_size: "10Gi"
+gateway_api_enabled: true
+
 
 # Metrics Server deployment
 metrics_server_enabled: true
-# metrics_server_container_port: 10250
-# metrics_server_kubelet_insecure_tls: true
-# metrics_server_metric_resolution: 15s
+
+
+
+# Cert manager deployment
+cert_manager_enabled: true
+# Override the kubespray default versioncert_manager_namespace: "cert-manager"
+cert_manager_version: "1.19.4"
+
+# MetalLB deployment
+metallb_enabled: false
+metallb_speaker_enabled: "{{ metallb_enabled }}"
+metallb_namespace: "metallb-system"

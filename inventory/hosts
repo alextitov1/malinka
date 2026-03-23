@@ -1,10 +1,10 @@
 ---
 all:
   hosts:
-    malinka1:
-      ansible_host: malinka1.lan
-    malinka2:
-      ansible_host: malinka2.lan
+    # malinka1:
+    #   ansible_host: malinka1.lan
+    # malinka2:
+    #   ansible_host: malinka2.lan
     malinka3:
       ansible_host: malinka3.lan
     vaio1:
@@ -14,7 +14,7 @@ all:
       ansible_become: false
 raspberries:
   hosts:
-    malinka2:
+    # malinka2:
     malinka3:
 
 servers:
@@ -28,8 +28,12 @@ workstation:
 ### kubespray groups
 kube_control_plane:
   hosts:
-    malinka1:
-      etcd_member_name: etcd101
+    # malinka1:
+    #   etcd_member_name: etcd101
+    # malinka2:
+    #   etcd_member_name: etcd102
+    malinka3:
+      etcd_member_name: etcd103
 
 etcd:
   children:
@@ -37,5 +41,6 @@ etcd:
 
 kube_node:
   hosts:
+    # malinka1:
+    # malinka2:
     malinka3:
-    malinka1:

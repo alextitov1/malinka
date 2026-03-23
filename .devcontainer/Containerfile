@@ -1,6 +1,7 @@
 FROM almalinux:9
 
 ARG PYTHON_VER=3.12
+ARG KUBECTL_VER=1.34.3
 
 
 COPY ansible-galaxy-requirements.yaml /tmp/ansible-galaxy-requirements.yaml
@@ -46,8 +47,8 @@ RUN dnf -y update && \
     # Kubectl
     ARCH="$(uname -m)" && \
     case "$ARCH" in aarch64) ARCH="arm64" ;; x86_64) ARCH="amd64" ;; esac && \
-    VER=$(curl -Ls https://dl.k8s.io/release/stable.txt) && \
-    curl -L -o /usr/local/bin/kubectl "https://dl.k8s.io/release/$VER/bin/linux/$ARCH/kubectl" && \
+    # VER=$(curl -Ls https://dl.k8s.io/release/stable.txt) && \
+    curl -L -o /usr/local/bin/kubectl "https://dl.k8s.io/release/$KUBECTL_VER/bin/linux/$ARCH/kubectl" && \
     chmod +x /usr/local/bin/kubectl && \
     ## kubectl completion
     kubectl completion zsh > /usr/share/zsh/site-functions/_kubectl && \
@@ -55,6 +56,15 @@ RUN dnf -y update && \
     echo 'fpath+=/usr/share/zsh/site-functions' >> /root/.zshrc && \
     echo 'autoload -Uz compinit && compinit' >> /root/.zshrc && \
     echo 'alias k=kubectl' >> /root/.zshrc && \
-    echo 'compdef _kubectl k' >> /root/.zshrc
+    echo 'compdef _kubectl k' >> /root/.zshrc && \
+
+    ## helm installation
+    curl -L https://get.helm.sh/helm-v3.19.0-linux-arm64.tar.gz -o /tmp/helm-v3.19.0-linux-arm64.tar.gz && \
+    mkdir /tmp/helm-temp && \
+    tar -zxvf /tmp/helm-v3.19.0-linux-arm64.tar.gz -C /tmp/helm-temp && \
+    mv /tmp/helm-temp/linux-arm64/helm /usr/local/bin/helm && \
+    chmod +x /usr/local/bin/helm && \
+    rm -rf /tmp/helm-v3.19.0-linux-arm64.tar.gz /tmp/helm-temp
+
 ## Set the KUBECONFIG path
 ENV KUBECONFIG=/workspace/inventory/artifacts/admin.conf

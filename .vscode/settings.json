@@ -6,12 +6,16 @@
         "initsetup",
         "kubespray",
         "lineinfile",
+        "lscr",
         "malinka",
+        "mediaserver",
+        "metallb",
         "nologin",
         "NOPASSWD",
         "noqa",
         "ohmyzsh",
         "onepassword",
+        "qbittorrent",
         "Restorecon",
         "sefcontext",
         "setype",
@@ -21,6 +25,7 @@
         "wipefs"
     ],
     "yaml.schemas": {
-        "https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/ansible.json#/$defs/playbook": "file:///workspace/plays/initsetup-play.yaml"
+        "https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/ansible.json#/$defs/playbook": "file:///workspace/plays/initsetup-play.yaml",
+        "kubernetes://schema/apps/v1%40deployment": "file:///workspace/k8s/mediaserver/qbittorent.yaml"
     }
 }

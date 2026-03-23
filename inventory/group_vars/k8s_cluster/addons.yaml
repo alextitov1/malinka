@@ -12,6 +12,15 @@ cert_manager_enabled: true
 cert_manager_version: "1.19.4"
 
 # MetalLB deployment
-metallb_enabled: false
+metallb_enabled: true
 metallb_speaker_enabled: "{{ metallb_enabled }}"
 metallb_namespace: "metallb-system"
+
+metallb_config:
+  address_pools:
+    primary:
+      ip_range:
+        - 192.168.88.240-192.168.88.245
+
+  layer2:
+    - primary

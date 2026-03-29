@@ -5,3 +5,4 @@ roles/
 temp/
 .lock
 inventory/artifacts/
+.DS_Store

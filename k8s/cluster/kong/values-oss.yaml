@@ -1,0 +1,60 @@
+# values.yaml for Kong API Gateway
+# Uses DB-less mode by default, operating as a Kubernetes Ingress Controller
+
+# image:
+#   repository: kong/kong-gateway
+#   tag: "3.10-rhel"
+
+gateway:
+  env:
+    admin_listen: "0.0.0.0:8001, 0.0.0.0:8444 http2 ssl"
+    database: "off"
+    admin_gui_url: "https://k.4esnok.su/manager"
+    admin_gui_api_url: "https://k.4esnok.su/admin"
+    admin_gui_path: "/manager"
+
+  admin:
+    enabled: true
+    type: ClusterIP # Kept as ClusterIP for security so it is only available inside the cluster
+    http:
+      enabled: true
+    tls:
+      enabled: true
+
+# Kong Ingress Controller configuration
+ingressController:
+  enabled: true
+  # Determines if Helm manages the CRDs. If false, you must install CRDs beforehand.
+  installCRDs: false
+
+# Kong proxy service configuration
+proxy:
+  enabled: true
+  # Change to ClusterIP or NodePort depending on how you expose your cluster services
+  type: LoadBalancer 
+  http:
+    enabled: true
+  tls:
+    enabled: true
+
+# Kong Admin API service configuration
+admin:
+  enabled: true
+  type: ClusterIP # Kept as ClusterIP for security so it is only available inside the cluster
+  http:
+    enabled: true
+  tls:
+    enabled: true
+
+# Autoscaling configuration for the proxy
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80

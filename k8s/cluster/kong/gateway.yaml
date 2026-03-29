@@ -1,0 +1,50 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: kong-01
+  annotations:
+    # This annotation indicates that this GatewayClass is unmanaged, meaning it won't be automatically associated with a controller.
+    # This allows us to have more control over which controller manages this GatewayClass, especially in scenarios where multiple controllers are present.
+    konghq.com/gatewayclass-unmanaged: "true"
+spec:
+  controllerName: konghq.com/kic-gateway-controller-01
+
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: kong
+  namespace: kong
+  annotations:
+    konghq.com/publish-service: kong/kong-kong-proxy
+spec:
+  gatewayClassName: kong-01
+  listeners:
+  - name: proxy
+    port: 80
+    protocol: HTTP
+    allowedRoutes:
+      namespaces:
+        from: All
+  - name: proxy-https-wildcard
+    port: 443
+    protocol: HTTPS
+    hostname: "*.k.4esnok.su"
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - name: wildcard-4esnok-su-tls
+    allowedRoutes:
+      namespaces:
+        from: All
+  - name: proxy-https-base
+    port: 443
+    protocol: HTTPS
+    hostname: "k.4esnok.su"
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - name: wildcard-4esnok-su-tls
+    allowedRoutes:
+      namespaces:
+        from: All

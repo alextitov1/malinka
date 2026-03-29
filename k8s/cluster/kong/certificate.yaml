@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-4esnok-su
+  namespace: kong
+spec:
+  privateKey:
+    rotationPolicy: Never
+  secretName: wildcard-4esnok-su-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+  - "k.4esnok.su"
+  - "*.k.4esnok.su"

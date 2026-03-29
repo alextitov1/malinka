@@ -13,7 +13,18 @@ ansible-playbook  playbooks/kubespray/kubespray-playbook.yaml
 ansible-playbook  playbooks/kubespray/reset.yaml
 ```
 
+### Install cluster services
 
+```sh
+# rancher
+cat k8s/cluster/rancher--local-path-provisioner/README.md
+
+# setup cert-manager Let's Encrypt staging issuer
+kubectl apply -f k8s/cluster/cert-manager/.
+
+# install and setup kong gateway
+cat k8s/cluster/kong/README.md
+```
 
 ## Setup USB-SSD storage on a managed node
 

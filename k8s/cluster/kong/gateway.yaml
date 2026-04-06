@@ -1,10 +1,8 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: GatewayClass
 metadata:
-  name: kong-01
+  name: kong-gc-01
   annotations:
-    # This annotation indicates that this GatewayClass is unmanaged, meaning it won't be automatically associated with a controller.
-    # This allows us to have more control over which controller manages this GatewayClass, especially in scenarios where multiple controllers are present.
     konghq.com/gatewayclass-unmanaged: "true"
 spec:
   controllerName: konghq.com/kic-gateway-controller-01
@@ -13,12 +11,12 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: kong
+  name: kong-gw-01
   namespace: kong
   annotations:
-    konghq.com/publish-service: kong/kong-kong-proxy
+    konghq.com/publish-service: kong/kong-gw-01-kong-proxy  # Tells KIC which service to use for the LoadBalancer IP/hostname
 spec:
-  gatewayClassName: kong-01
+  gatewayClassName: kong-gc-01
   listeners:
   - name: proxy
     port: 80

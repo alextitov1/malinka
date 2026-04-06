@@ -1,0 +1,54 @@
+# values-enterprise-kic.yaml for Kong Enterprise API Gateway
+# Split topology: this file is for the Gateway (proxy) release only.
+
+image:
+  repository: kong/kong-gateway
+  tag: "3.13-rhel"
+
+# Number of Gateway pods (proxy/data plane).
+replicaCount: 1
+
+enterprise:
+  enabled: true
+  # Refers to the secret containing the Kong Enterprise license
+  license_secret: kong-enterprise-license
+  vitals:
+    enabled: true
+
+env:
+  database: "off"
+  # role: "traditional" # In DBC-less or traditional mode, not hybrid
+  admin_listen: "0.0.0.0:8001, 0.0.0.0:8444 http2 ssl"
+  admin_gui_url: "https://k.4esnok.su/manager"
+  admin_gui_api_url: "https://k.4esnok.su/admin"
+  admin_gui_path: "/manager"
+
+# In split mode, KIC runs in a dedicated controller-only release.
+ingressController:
+  enabled: false
+
+# Kong proxy service configuration
+proxy:
+  enabled: true
+  type: LoadBalancer 
+  http:
+    enabled: true
+  tls:
+    enabled: true
+
+# Kong Admin API service configuration
+admin:
+  enabled: true
+  type: ClusterIP 
+  http:
+    enabled: true
+  tls:
+    enabled: true
+
+manager:
+  enabled: true
+  type: ClusterIP
+  http:
+    enabled: true
+  tls:
+    enabled: false

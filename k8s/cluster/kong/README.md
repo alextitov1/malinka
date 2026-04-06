@@ -2,6 +2,10 @@
 
 This directory contains Helm values and manifests for Kong OSS and Kong Enterprise.
 
+Kong Enterprise consists of two helm deployments (same chart, different values):
+- `kic` - Kong Ingress Controller (KIC) only - reads Kubernetes Gateway API resources and configures the Gateway (proxy).
+- `kong proxy` a.k.a. `kong gateway` - the actual Kong Gateway (proxy) that handles data plane traffic.
+ 
 ## Cleanup
 
 ```bash
@@ -11,15 +15,19 @@ helm uninstall kong-dp -n kong || true
 # kubectl delete namespace kong
 ```
 
-# Deploy Kong Enterprise KIC/DP (DB-less, Recommended)
-
-This setup deploys Kong Enterprise alongside the Kong Ingress Controller (KIC). This is the best layout for GitOps style setups where Kong configuration and limits are declared in K8S manifests without needing a Postgres DB.
+# Deploy Kong Enterprise KIC Gateway Discovery (Split, DB-less, Recommended)
 
 1. Add the Kong Helm repository:
 
    ```bash
    helm repo add kong https://charts.konghq.com
    helm repo update
+
+   # check available versions
+   helm search repo kong/kong --versions
+
+   # check available values
+   helm show values kong/kong --version 3.1.0
    ```
 
 2. Create namespace:
@@ -35,16 +43,43 @@ This setup deploys Kong Enterprise alongside the Kong Ingress Controller (KIC). 
      --from-file=license=./k8s/cluster/kong/kong-lic.json
    ```
 
-4. Install Kong Enterprise KIC:
+4. Install the Gateway release (proxy only):
 
    ```bash
    # list chart versions
    helm search repo kong/kong --versions
 
-   helm upgrade --install kong kong/kong \
+   helm upgrade --install kong-gw-01 kong/kong \
+     -n kong \
+     -f k8s/cluster/kong/values-enterprise-gw.yaml \
+     --version 3.1.0
+   ```
+
+5. Install the KIC controller-only release:
+
+   ```bash
+   helm upgrade --install kong-kic-01 kong/kong \
      -n kong \
      -f k8s/cluster/kong/values-enterprise-kic.yaml \
      --version 3.1.0
+   ```
+
+6. Apply Gateway API resources:
+
+    ```bash
+    kubectl apply -f k8s/cluster/kong/gateway.yaml
+    kubectl apply -f k8s/cluster/kong/admin-httproute.yaml
+    kubectl apply -f k8s/cluster/kong/manager-httproute.yaml
+    ```
+
+7. Scale independently:
+
+   ```bash
+   # scale Gateway proxy pods
+   kubectl scale deploy/kong-kong -n kong --replicas=5
+
+   # scale KIC controller pods
+   kubectl scale deploy/kong-kic -n kong --replicas=2
    ```
 
 

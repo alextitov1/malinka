@@ -1,55 +1,32 @@
-# values-enterprise-kic.yaml for Kong Enterprise API Gateway
-# Uses DB-less mode, operating as a Kubernetes Ingress Controller (KIC + DP) with Enterprise features enabled
+# values-enterprise-kic-controller.yaml
+# Split topology: controller-only release (no proxy container).
 
-image:
-  repository: kong/kong-gateway
-  tag: "3.10-rhel"
+# Number of KIC controller pods.
+replicaCount: 1
 
-enterprise:
-  enabled: true
-  # Refers to the secret containing the Kong Enterprise license
-  license_secret: kong-enterprise-license
-  vitals:
-    enabled: true
-
-env:
-  database: "off"
-  role: "traditional" # In DBC-less or traditional mode, not hybrid
-  admin_listen: "0.0.0.0:8001, 0.0.0.0:8444 http2 ssl"
-  admin_gui_url: "https://k.4esnok.su/manager"
-  admin_gui_api_url: "https://k.4esnok.su/admin"
-  admin_gui_path: "/manager"
+deployment:
+  kong:
+    enabled: false
 
 # Kong Ingress Controller configuration
 ingressController:
   enabled: true
-  installCRDs: false # Keeps the existing behavior of not letting Helm manage CRDs
+  installCRDs: false
+  image:
+    repository: kong/kubernetes-ingress-controller
+    tag: "3.5.6"
+  gatewayDiscovery:
+    enabled: true
+    # We target the admin service from the Gateway release (release name: kong).
+    generateAdminApiService: false
+    adminApiService:
+      namespace: kong
+      name: kong-gw-01-kong-admin
+
   env:
-    # Explicitly matches the controllerName used in GatewayClass
+    # Keep explicit so GatewayClass controllerName is unambiguous.
     gateway_api_controller_name: konghq.com/kic-gateway-controller-01
-
-# Kong proxy service configuration
-proxy:
-  enabled: true
-  type: LoadBalancer 
-  http:
-    enabled: true
-  tls:
-    enabled: true
-
-# Kong Admin API service configuration
-admin:
-  enabled: true
-  type: ClusterIP 
-  http:
-    enabled: true
-  tls:
-    enabled: true
-
-manager:
-  enabled: true
-  type: ClusterIP
-  http:
-    enabled: true
-  tls:
-    enabled: false
+    # Publish addresses from the Gateway release proxy service.
+    publish_service: kong/kong-gw-01-kong-proxy
+    # Gateway admin TLS is self-signed by default in chart installs.
+    kong_admin_tls_skip_verify: true

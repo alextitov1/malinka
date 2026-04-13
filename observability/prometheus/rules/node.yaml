@@ -1,0 +1,14 @@
+groups:
+  - name: node.rules
+    interval: 30s
+    rules:
+      - record: node:cpu_usage:rate
+        expr: |
+          1 - avg by (instance) (
+            rate(node_cpu_seconds_total{mode="idle"}[5m])
+          )
+      - record: node:memory_usage:ratio
+        expr: |
+          node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes
+          /
+          node_memory_MemTotal_bytes

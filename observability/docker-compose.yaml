@@ -7,6 +7,7 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml:ro
+      - ./prometheus/rules:/etc/prometheus/rules:ro
       - prometheus_data:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yaml"
@@ -72,6 +73,21 @@ services:
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
     privileged: true
+  blackbox-exporter:
+    image: prom/blackbox-exporter:latest
+    container_name: blackbox-exporter
+    restart: unless-stopped
+    ports:
+      - "9115:9115"
+    volumes:
+      - ./prometheus/blackbox.yaml:/etc/blackbox_exporter/config.yaml:ro
+    command:
+      - "--config.file=/etc/blackbox_exporter/config.yaml"
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:9115/-/ready"]
+    #   interval: 10s
+    #   timeout: 3s
+    #   retries: 10
   grafana:
     image: grafana/grafana:12.4.2
     container_name: grafana
@@ -94,3 +110,4 @@ volumes:
   prometheus_data:
   loki_data:
   alertmanager_data:
+  blackbox-exporter_data:

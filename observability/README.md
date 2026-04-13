@@ -20,3 +20,13 @@ Run grafana-cli
 ```
 docker exec -it grafana grafana cli --version
 ```
+
+
+### Prometheus sanity queries
+
+```
+up
+node_cpu_seconds_total
+container_cpu_usage_seconds_total
+probe_success
+```

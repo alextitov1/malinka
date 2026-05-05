@@ -1,0 +1,103 @@
+---
+- name: Install OpenZFS (ZoL) from source for AlmaLinux 9 (ARM64)
+  hosts: zfs_hosts
+  become: true
+  tasks:
+    - name: Enable CRB (CodeReady Builder) repository for dependencies
+      ansible.builtin.command: dnf config-manager --set-enabled crb
+      register: crb_result
+      changed_when: false
+
+    - name: Ensure EPEL release is installed
+      ansible.builtin.dnf:
+        name: epel-release
+        state: present
+
+    - name: Install OpenZFS build dependencies
+      ansible.builtin.dnf:
+        name:
+          - gcc
+          - make
+          - autoconf
+          - automake
+          - libtool
+          - rpm-build
+          - libtirpc-devel
+          - libblkid-devel
+          - libuuid-devel
+          - libudev-devel
+          - openssl-devel
+          - zlib-devel
+          - libaio-devel
+          - libattr-devel
+          - elfutils-libelf-devel
+          - kernel-devel
+          - raspberrypi2-kernel4-devel  # Required specifically for your Raspberry Pi kernel
+          - python3
+          - python3-devel
+          - python3-setuptools
+          - python3-cffi
+          - libffi-devel
+          - git
+          - dkms
+        state: present
+
+    - name: Remove old OpenZFS source directory
+      ansible.builtin.file:
+        path: /usr/local/src/zfs
+        state: absent
+
+    - name: Clone OpenZFS repository (Latest)
+      ansible.builtin.git:
+        repo: https://github.com/openzfs/zfs.git
+        dest: /usr/local/src/zfs
+        version: zfs-2.4.1
+        depth: 1
+
+    - name: Run autogen.sh
+      ansible.builtin.command: sh autogen.sh
+      args:
+        chdir: /usr/local/src/zfs
+        creates: /usr/local/src/zfs/configure
+
+    - name: Run configure
+      ansible.builtin.command: ./configure
+      args:
+        chdir: /usr/local/src/zfs
+        creates: /usr/local/src/zfs/Makefile
+
+    - name: Build OpenZFS RPMs (DKMS and Utils)
+      ansible.builtin.command: make -j2 rpm-utils rpm-dkms
+      args:
+        chdir: /usr/local/src/zfs
+        creates: /usr/local/src/zfs/zfs-2.4.1.aarch64.rpm
+
+    - name: Find generated RPM files
+      ansible.builtin.find:
+        paths: /usr/local/src/zfs
+        patterns: "*.rpm"
+        excludes: "*.src.rpm"
+      register: zfs_rpms
+
+    - name: Install compiled OpenZFS RPMs  # noqa: package-latest
+      ansible.builtin.dnf:
+        name: "{{ zfs_rpms.files | map(attribute='path') | list }}"
+        state: present
+        disable_gpg_check: true
+
+    - name: Load ZFS kernel module
+      community.general.modprobe:
+        name: zfs
+        state: present
+
+    - name: Enable and start ZFS target services
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+        daemon_reload: true
+      loop:
+        - zfs.target
+        - zfs-import-cache.service
+        - zfs-mount.service
+        - zfs-import.target

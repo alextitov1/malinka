@@ -6,3 +6,6 @@ temp/
 .lock
 inventory/artifacts/
 .DS_Store
+
+# observability
+observability/backups/*

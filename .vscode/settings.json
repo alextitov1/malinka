@@ -1,8 +1,10 @@
 {
     "ansible.python.interpreterPath": "/usr/bin/python3.12",
     "cSpell.words": [
+        "blackbox",
         "compinit",
         "firewalld",
+        "healthcheck",
         "initsetup",
         "kubespray",
         "lineinfile",

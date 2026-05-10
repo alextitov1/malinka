@@ -1,4 +1,13 @@
-# init setup
+# Malinka
+
+<img src="docs/pics/malinka-logo.png" width="200" />
+
+This is a homelab project to build a Kubernetes cluster on top of Raspberry Pis and retired laptops.
+
+*Malinka stands for "little raspberry" in Russian*
+
+<img src="docs/pics/pi-rack.jpg" width="400"/>
+<img src="docs/pics/pi-rack-1.jpg" width="700"/>
 
 ## Setup a control node
 
@@ -26,139 +35,3 @@ kubectl apply -f k8s/cluster/cert-manager/.
 cat k8s/cluster/kong/README.md
 ```
 
-## Setup USB-SSD storage on a managed node
-
-if necessary, wipe existing partition table `wipefs -a /dev/sda`
-
-```sh
-ansible-playbook -e host=malinka3 ./init/ssdsetup-playbook.yaml
-```
-
-## Start a media server
-
-Prepare a host
-```
-ansible-playbook -e host=malinka2 plays/media-server-config.yml
-```
-
-
-
-# Repo notes
-
-## SSD-USB
-
-performance test
-```sh
-hdparm -tT --direct /dev/sda
-```
-
-usb3-sata issue:
-```
-https://forums.raspberrypi.com/viewtopic.php?t=245931
-
-https://github.com/raspberrypi/linux/issues/3070
-```
-
-fix
-```
-# get idVendor=7825, idProduct=a2a4
-lsusb
-lsusb -t
-dmesg -C + unplug/plug + dmesg
-
-# At the start of the line of parameters /boot/cmdline.txt
-usb-storage.quirks=7825:a2a4:u console=tt....
-
-```
-
-## Clean up partition table
-
-```sh
-wipefs -a /dev/sda
-```
-
-
-## mount options
-```sh
-UUID=c1eb2700-2c4b-40d2-9617-dbe54ec2e3c5 /media/pi/Seagate3TB ext4 auto,nofail,noatime,users,rw 0 0
-```
-
-## Alma wifi connect to Wi-Fi
-
-```sh
-nmcli radio wifi
-nmcli dev wifi list
-nmcli --ask dev wifi connect network-ssid
-
-
-nmcli connection show
-```
-# Power
-
-## Pi 5 usb-boot
-```
-to 
-/boot/firmware/config.txt
-
-add
-usb_max_current_enable=1 
-```
-
-### Pi 5 Power requirement
-```
-It's actually USB Power Delivery specification that's confusing.
-
-The Pi 5 expects 5v / 5a to enable usb boot. In USB Power Delivery, anything that goes above 3A requires a special 'e-marked' cable. Even though 5x5 is 25W, the PSU needs to support these more than 3A stuff. With most 27W PSU you'll find on the market, they will only provide up to 9V / 3A so they won't be good for the Pi.
-
-So basically check the output capabilities of the PSU before buying one. They are called PDO (Power Delivery Object) and you'll be able to see if 5v / 5a is supported or not that way.
-```
-
-# Performance test result
-
-## Disk tests
-```sh
-the tests script 
-fio/drive_test.sh
-```
-### Results
->Sandisk ultra 32G A1 microSD (debian, custom power)
- - Linear read: 44 Mi/s
- - Random read: 2886 IOPS
- - Linear write: 23 Mi/s
- - Random write: 771 IOPS
- - Random write single thread: 236 IOPS
-
->ChineseSSD USB-SATA Driver=uas (debian, custom power)
- - Linear read: 340 Mi/s
- - Random read: 16993 IOPS
- - Linear write: 278 Mi/s
- - Random write: 25567 IOPS
- - Random write single thread: 804 IOPS
-
- Same as ^^^^ Driver=usb-storage
- - Linear read: 279Mi/s
- - Random read: 4653 IOPS
- - Linear write: 233Mi/s
- - Random write: 1793 IOPS
- - Random write single thread: 783 IOPS
-
->KingstonSSD(old)  USB-SATA Driver=usb-storage (alma, Pi power adapter)
- - Linear read: 211Mi/s
- - Random read: 3133 IOPS
- - Linear write: 177Mi/s
- - Random write: 779 IOPS
- - Random write single thread: 1019 IOPS
-
- Same as ^^^^ Driver=uas
- - Linear read: 348Mi/s
- - Random read: 18587 IOPS
- - Linear write: 212Mi/s
- - Random write: 4597 IOPS
- - Random write single thread: 1138 IOPS
-
->NVMe 24HY08000831  HYV256X3 (HXY) 256.06 FW APF1M3R1 (debian Pi5)
- - Linear read: 431Mi/s
- - Random read: 107677 IOPS
- - Linear write: 422Mi/s
- - Random write: 49227 IOPS
- - Random write single thread: 978 IOPS

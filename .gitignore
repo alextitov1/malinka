@@ -1,6 +1,6 @@
 venv/
-a_lab/collections/
 collections/
+.ansible/
 roles/
 temp/
 .lock

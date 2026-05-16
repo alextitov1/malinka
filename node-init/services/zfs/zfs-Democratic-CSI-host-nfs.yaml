@@ -1,0 +1,49 @@
+---
+- name: Setup ZFS host for Democratic-CSI (NFS)
+  hosts: zfs_hosts
+  become: true
+  vars:
+    # Change 'tank' to whatever you named your ZFS pool
+    zfs_pool_name: storage
+    zfs_k8s_parent: "{{ zfs_pool_name }}/malinka-k8s"
+
+  tasks:
+    - name: Install nfs-utils
+      ansible.builtin.dnf:
+        name: nfs-utils
+        state: present
+
+    - name: Enable and start NFS server
+      ansible.builtin.systemd:
+        name: nfs-server
+        enabled: true
+        state: started
+
+    - name: Ensure parent ZFS dataset exists for Kubernetes
+      ansible.builtin.command: zfs create -p {{ zfs_k8s_parent }}
+      register: zfs_create
+      failed_when:
+        - zfs_create.rc != 0
+        - "'already exists' not in zfs_create.stderr"
+      changed_when: zfs_create.rc == 0
+
+    - name: Generate SSH keypair locally for Democratic CSI
+      delegate_to: localhost
+      become: false
+      ansible.builtin.command: >
+        ssh-keygen -t ed25519 -f "{{ playbook_dir }}/k8s-csi-key" -N ''
+      args:
+        creates: "{{ playbook_dir }}/k8s-csi-key"
+
+    - name: Add CSI SSH public key to root's authorized_keys
+      ansible.posix.authorized_key:
+        user: root
+        state: present
+        key: "{{ lookup('file', playbook_dir ~ '/k8s-csi-key.pub') }}"
+
+    - name: Display instructions for CSI values.yaml
+      ansible.builtin.debug:
+        msg:
+          - "ZFS Node configured successfully!"
+          - "Your SSH private key for the Democratic CSI helm chart is saved at: {{ playbook_dir }}/k8s-csi-key"
+          - "Make sure to set datasetParentName: {{ zfs_k8s_parent }} in your Helm values."

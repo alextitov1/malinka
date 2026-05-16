@@ -1,0 +1,202 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: qbittorrent-route
+  namespace: mediaserver
+  annotations:
+    konghq.com/strip-path: "true"
+spec:
+  parentRefs:
+    - name: kong-gw-01
+      namespace: kong
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /qb
+      backendRefs:
+        - name: qbittorrent-service
+          port: 30001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qbittorrent-service
+  namespace: mediaserver
+spec:
+  selector:
+    app: qbittorrent
+  ports:
+    - protocol: TCP
+      port: 30001
+      targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qbittorrent-service-external
+  namespace: mediaserver
+spec:
+  selector:
+    app: qbittorrent
+  ports:
+    - name: qb-tcp
+      protocol: TCP
+      port: 51413
+      targetPort: 51413
+    - name: qb-ssl-tcp
+      protocol: TCP
+      port: 51414
+      targetPort: 51414
+    - name: qb-udp
+      protocol: UDP
+      port: 51413
+      targetPort: 51413
+    - name: qb-webui-tcp
+      protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: LoadBalancer
+  loadBalancerIP: 192.168.88.242
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qbittorrent-deployment
+  labels:
+    app: qbittorrent
+  namespace: mediaserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qbittorrent
+  template:
+    metadata:
+      labels:
+        app: qbittorrent
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: malinka3
+      containers:
+        - name: qbittorrent
+          image: lscr.io/linuxserver/qbittorrent:latest
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "2000m"
+          volumeMounts:
+            - mountPath: /downloads
+              name: downloads
+            - mountPath: /config/qBittorrent.conf
+              name: qbittorrent-config
+              subPath: qbittorrent.conf
+              readOnly: false
+            - mountPath: /config/qBittorrent/qBittorrent.conf
+              name: qbittorrent-config
+              subPath: qbittorrent.conf
+              readOnly: false
+            - mountPath: /config/qBittorrent/
+              name: qbittorrent-data
+      volumes:
+        - name: downloads
+          persistentVolumeClaim:
+            claimName: mediaserver-shared-pv
+        - name: qbittorrent-config
+          configMap:
+            name: qbittorrent-config
+        - name: qbittorrent-data
+          persistentVolumeClaim:
+            claimName: qbittorrent-data-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: qbittorrent-data-pvc
+  namespace: mediaserver
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: zfs-nfs
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: qbittorrent-config
+  namespace: mediaserver
+data:
+  qbittorrent.conf: |
+    [Application]
+    FileLogger\Age=1
+    FileLogger\AgeType=1
+    FileLogger\Backup=true
+    FileLogger\DeleteOld=true
+    FileLogger\Enabled=true
+    FileLogger\MaxSizeBytes=66560
+    FileLogger\Path=/config/qBittorrent/logs1
+
+    [AutoRun]
+    enabled=false
+    program=
+
+    [BitTorrent]
+    Session\AddTorrentStopped=false
+    Session\DefaultSavePath=/downloads/
+    Session\ExcludedFileNames=
+    Session\PerformanceWarning=true
+    Session\QueueingSystemEnabled=true
+    Session\ShareLimitAction=Stop
+    Session\TempPath=/downloads/incomplete/
+    Session\Port=51413
+    Session\SSL\Port=51414
+    Session\RequestQueueSize=5000
+
+    [Core]
+    AutoDeleteAddedTorrentFile=Never
+
+    [LegalNotice]
+    Accepted=true
+
+    [Meta]
+    MigrationVersion=8
+
+    [Network]
+    PortForwardingEnabled=false
+    Proxy\HostnameLookupEnabled=false
+    Proxy\Profiles\BitTorrent=true
+    Proxy\Profiles\Misc=true
+    Proxy\Profiles\RSS=true
+
+    [Preferences]
+    Connection\PortRangeMin=51413
+    Connection\UPnP=false
+    Downloads\SavePath=/downloads/
+    Downloads\TempPath=/downloads/incomplete/
+    General\Locale=en
+    MailNotification\req_auth=true
+    WebUI\Address=*
+    WebUI\AuthSubnetWhitelist=192.168.0.0/16
+    WebUI\AuthSubnetWhitelistEnabled=true
+    WebUI\CSRFProtection=false
+    WebUI\ClickjackingProtection=false
+    WebUI\HostHeaderValidation=false
+    WebUI\Port=30001
+    WebUI\RootFolder=/qb
+    WebUI\ReverseProxySupportEnabled=true
+    WebUI\TrustedReverseProxiesList=10.0.0.0/8
+    WebUI\ServerDomains=*
+    General\DeleteTorrentsFilesAsDefault=true
+    General\StatusbarExternalIPDisplayed=true
+
+    [RSS]
+    AutoDownloader\DownloadRepacks=true
+    AutoDownloader\SmartEpisodeFilter=s(\\d+)e(\\d+), (\\d+)x(\\d+), "(\\d{4}[.\\-]\\d{1,2}[.\\-]\\d{1,2})", "(\\d{1,2}[.\\-]\\d{1,2}[.\\-]\\d{4})"
+

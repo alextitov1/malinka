@@ -1,0 +1,226 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: transmission-route
+  namespace: mediaserver
+  annotations:
+    konghq.com/strip-path: "false"
+spec:
+  parentRefs:
+    - name: kong-gw-01
+      namespace: kong
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /transmission
+      backendRefs:
+        - name: transmission-service
+          port: 9091
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: transmission-service
+  namespace: mediaserver
+spec:
+  selector:
+    app: transmission
+  ports:
+    - name: rpc-http
+      protocol: TCP
+      port: 9091
+      targetPort: 9091
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: transmission-service-external
+  namespace: mediaserver
+spec:
+  selector:
+    app: transmission
+  ports:
+    - name: peer-tcp
+      protocol: TCP
+      port: 52413
+      targetPort: 52413
+    - name: peer-udp
+      protocol: UDP
+      port: 52413
+      targetPort: 52413
+    - name: rpc-http
+      protocol: TCP
+      port: 80
+      targetPort: 9091
+  type: LoadBalancer
+  loadBalancerIP: 192.168.88.243
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transmission-deployment
+  labels:
+    app: transmission
+  namespace: mediaserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: transmission
+  template:
+    metadata:
+      labels:
+        app: transmission
+    spec:
+      initContainers:
+        - name: init-config
+          image: busybox:latest
+          command: ['sh', '-c', 'mkdir -p /config && cp -f /tmp/settings/settings.json /config/settings.json || true && chown -R 1000:1000 /config']
+          volumeMounts:
+            - name: transmission-data
+              mountPath: /config
+            - name: transmission-settings
+              mountPath: /tmp/settings
+      containers:
+        - name: transmission
+          image: lscr.io/linuxserver/transmission:4.1.0
+          env:
+            # - name: PUID
+            #   value: "1000"
+            # - name: PGID
+            #   value: "1000"
+            - name: TZ
+              value: "Etc/UTC"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "2000m"
+          volumeMounts:
+            - name: transmission-data
+              mountPath: /config
+            - name: mediaserver-shared
+              mountPath: /media
+            # - name: watch
+            #   mountPath: /watch
+            #   subPath: watch
+      volumes:
+        - name: transmission-data
+          persistentVolumeClaim:
+            claimName: transmission-data-pvc
+        - name: transmission-settings
+          configMap:
+            name: transmission-config
+        - name: mediaserver-shared
+          persistentVolumeClaim:
+            claimName: mediaserver-shared-pv
+        # - name: watch
+        #   persistentVolumeClaim:
+        #     claimName: mediaserver-shared-pv
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: transmission-data-pvc
+  namespace: mediaserver
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: zfs-nfs
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: transmission-config
+  namespace: mediaserver
+data:
+  settings.json: |
+    {
+      "alt-speed-down": 50,
+      "alt-speed-enabled": false,
+      "alt-speed-time-begin": 540,
+      "alt-speed-time-day": 127,
+      "alt-speed-time-enabled": false,
+      "alt-speed-time-end": 1020,
+      "alt-speed-up": 50,
+      "announce-ip": "",
+      "announce-ip-enabled": false,
+      "anti-brute-force-enabled": false,
+      "anti-brute-force-threshold": 100,
+      "bind-address-ipv4": "0.0.0.0",
+      "bind-address-ipv6": "::",
+      "blocklist-enabled": false,
+      "blocklist-url": "http://www.example.com/blocklist",
+      "cache-size-mb": 4,
+      "default-trackers": "",
+      "dht-enabled": true,
+      "download-dir": "/media",
+      "download-queue-enabled": true,
+      "download-queue-size": 3,
+      "encryption": 1,
+      "idle-seeding-limit": 4320,
+      "idle-seeding-limit-enabled": true,
+      "incomplete-dir": "/media",
+      "incomplete-dir-enabled": false,
+      "lpd-enabled": true,
+      "message-level": 2,
+      "peer-congestion-algorithm": "",
+      "peer-id-ttl-hours": 6,
+      "peer-limit-global": 200,
+      "peer-limit-per-torrent": 100,
+      "peer-port": 52413,
+      "peer-port-random-high": 65535,
+      "peer-port-random-low": 49152,
+      "peer-port-random-on-start": false,
+      "peer-socket-tos": "le",
+      "pex-enabled": true,
+      "port-forwarding-enabled": true,
+      "preallocation": 1,
+      "prefetch-enabled": true,
+      "queue-stalled-enabled": true,
+      "queue-stalled-minutes": 30,
+      "ratio-limit": 2,
+      "ratio-limit-enabled": true,
+      "rename-partial-files": false,
+      "rpc-authentication-required": false,
+      "rpc-bind-address": "0.0.0.0",
+      "rpc-enabled": true,
+      "rpc-host-whitelist": "",
+      "rpc-host-whitelist-enabled": false,
+      "rpc-password": "{d0a452ac5515ac21823189f38ea70d86374b81f4MJE0a0yA",
+      "rpc-port": 9091,
+      "rpc-socket-mode": "0750",
+      "rpc-url": "/transmission/",
+      "rpc-username": "",
+      "rpc-whitelist": "",
+      "rpc-whitelist-enabled": false,
+      "scrape-paused-torrents-enabled": true,
+      "script-torrent-added-enabled": false,
+      "script-torrent-added-filename": "",
+      "script-torrent-done-enabled": false,
+      "script-torrent-done-filename": "",
+      "script-torrent-done-seeding-enabled": false,
+      "script-torrent-done-seeding-filename": "",
+      "seed-queue-enabled": false,
+      "seed-queue-size": 10,
+      "speed-limit-down": 100,
+      "speed-limit-down-enabled": false,
+      "speed-limit-up": 512,
+      "speed-limit-up-enabled": true,
+      "start-added-torrents": true,
+      "tcp-enabled": true,
+      "torrent-added-verify-mode": "fast",
+      "trash-original-torrent-files": true,
+      "umask": "002",
+      "upload-slots-per-torrent": 14,
+      "utp-enabled": true,
+      "watch-dir": "/watch",
+      "watch-dir-enabled": false
+    }

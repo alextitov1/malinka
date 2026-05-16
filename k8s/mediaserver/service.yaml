@@ -1,15 +1,46 @@
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: qbittorrent-service
-  namespace: mediaserver
-spec:
-  selector:
-    app: qbittorrent
-  ports:
-    - protocol: TCP
-      port: 30001
-      targetPort: 30001
-      nodePort: 30001
-  type: NodePort
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: qbittorrent-service
+#   namespace: mediaserver
+# spec:
+#   selector:
+#     app: qbittorrent
+#   ports:
+#     - protocol: TCP
+#       port: 30001
+#       targetPort: 30001
+#       nodePort: 30001
+#     - protocol: TCP
+#       port: 51413
+#       targetPort: 51413
+#       nodePort: 51413
+#     - protocol: UDP
+#       port: 51413
+#       targetPort: 51413
+#       nodePort: 51413
+#   type: NodePort
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: qbittorrent-service
+#   namespace: mediaserver
+# spec:
+#   selector:
+#     app: qbittorrent
+#   ports:
+#     - protocol: TCP
+#       port: 30001
+#       targetPort: 30001
+#       nodePort: 30001
+#     - protocol: TCP
+#       port: 51413
+#       targetPort: 51413
+#       nodePort: 51413
+#     - protocol: UDP
+#       port: 51413
+#       targetPort: 51413
+#       nodePort: 51413
+#   type: NodePort

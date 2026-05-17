@@ -9,3 +9,5 @@ inventory/artifacts/
 
 # observability
 observability/backups/*
+
+sandpit/

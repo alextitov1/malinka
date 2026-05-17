@@ -1,0 +1,239 @@
+# Produce cleaner resources names
+cleanPrometheusOperatorObjectNames: true
+    
+# AlertManager configuration
+alertmanager:
+  alertmanagerSpec:
+    ##
+    ## Configure access to AlertManager via dedicated hostname
+    externalUrl: https://k.4esnok.su/alertmanager
+    routePrefix: /alertmanager
+    ##
+    ## HA configuration: Replicas
+    ## Number of Alertmanager POD replicas
+    replicas: 1
+    ##
+    ## POD Storage Spec
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: zfs-nfs
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 1Gi
+    ##
+  ## Configure HTTPRoute via Gateway API
+  route:
+    main:
+      enabled: true
+      parentRefs:
+        - name: kong-gw-01
+          namespace: kong
+      matches:
+        - path:
+            type: PathPrefix
+            value: /alertmanager
+    
+# Prometheus configuration
+prometheus:
+  prometheusSpec:
+    ##
+    ## Removing default filter Prometheus selectors
+    ## Default selector filters defined by default in helm chart.
+    ## matchLabels:
+    ##   release: {{ $.Release.Name | quote }}
+    ## ServiceMonitor, PodMonitor, Probe and Rules need to have label 'release' equals to kube-prom-stack helm release (kube-prom-stack)
+    podMonitorSelectorNilUsesHelmValues: false
+    probeSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    scrapeConfigSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+    ##
+    ## EnableAdminAPI enables Prometheus the administrative HTTP API which includes functionality such as deleting time series.
+    ## This is disabled by default. --web.enable-admin-api command line
+    ## ref: https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis
+    enableAdminAPI: true
+    ##
+    ## Configure access to Prometheus via dedicated hostname
+    ## --web.external-url Prometheus command line parameter
+    externalUrl: https://k.4esnok.su/prometheus
+    routePrefix: /prometheus
+    ##
+    ## HA configuration: Replicas & Shards
+    ## Number of replicas of each shard to deploy for a Prometheus deployment.
+    ## Number of replicas multiplied by shards is the total number of Pods created.
+    replicas: 1
+    shards: 1
+    ##
+    ## TSDB Configuration
+    ## ref: https://prometheus.io/docs/prometheus/latest/storage/#operational-aspects
+    # Enable WAL compression
+    walCompression: true
+    # Retention data configuration
+    retention: 14d
+    retentionSize: 50GB
+    ## Enable Experimental Features
+    # ref: https://prometheus.io/docs/prometheus/latest/feature_flags/
+    enableFeatures:
+      # Enable Memory snapshot on shutdown.
+      - memory-snapshot-on-shutdown
+    ##
+    ## Limit POD Resources
+    resources:
+      limits:
+        cpu: 300m
+        memory: 1000Mi
+    ##
+    ## POD Storage Spec
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: zfs-nfs
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 50Gi
+    # Additional external labels to be added to all metrics
+    externalLabels:
+      cluster: malinka-cl
+    ##
+  ## Configure HTTPRoute via Gateway API
+  route:
+    main:
+      enabled: true
+      parentRefs:
+        - name: kong-gw-01
+          namespace: kong
+      matches:
+        - path:
+            type: PathPrefix
+            value: /prometheus
+    
+# Prometheus Node Exporter Configuration
+prometheus-node-exporter:
+  fullnameOverride: node-exporter
+  extraArgs:
+    - --collector.textfile.directory=/var/lib/node-exporter/textfile-collector
+  extraHostVolumeMounts:
+    - name: pi-textfile-collector
+      hostPath: /var/lib/node-exporter-textfile
+      mountPath: /var/lib/node-exporter/textfile-collector
+      mountPropagation: HostToContainer
+      readOnly: true
+    
+# Kube-State-Metrics Configuration
+kube-state-metrics:
+  fullnameOverride: kube-state-metrics
+    
+# Grafana Configuration
+grafana:
+  fullnameOverride: grafana
+  # Admin user password
+  adminPassword: "grafana"
+  # grafana configuration
+  grafana.ini:
+    server:
+      domain: k.4esnok.su
+      root_url: "https://%(domain)s/grafana/"
+      serve_from_sub_path: true
+  ##
+  ## Provisioning sidecars
+  ##
+  sidecar:
+    dashboards:
+      # Enable dashboard sidecar
+      enabled: true
+      # Enable discovery in all namespaces
+      searchNamespace: ALL
+      # Search for ConfigMaps containing `grafana_dashboard` label
+      label: grafana_dashboard
+      # Annotation containing the folder where sidecar will place the dashboard.
+      folderAnnotation: grafana_folder
+      provider:
+        # disableDelete to activate a import-only behaviour
+        disableDelete: true
+        # allow Grafana to replicate dashboard structure from filesystem
+        foldersFromFilesStructure: true
+    datasources:
+      # Enable datasource sidecar
+      enabled: true
+      # Enable discovery in all namespaces
+      searchNamespace: ALL
+      # Search for ConfigMaps containing `grafana_datasource` label
+      label: grafana_datasource
+      labelValue: "1"
+  ## Grafana HTTPRoute configuration
+  route:
+    main:
+      enabled: true
+      apiVersion: gateway.networking.k8s.io/v1
+      kind: HTTPRoute
+      parentRefs:
+        - name: kong-gw-01
+          namespace: kong
+      matches:
+        - path:
+            type: PathPrefix
+            value: /grafana
+
+# Kubernetes Monitoring
+## Kubelet
+##
+# Enable kubelet service
+kubeletService:
+  ## Prometheus Operator creates Kubelet service
+  ## Prometheus Operator started with options
+  ## `--kubelet-service=kube-system/kube-prometheus-stack-kubelet`
+  ## `--kubelet-endpoints=true`
+  enabled: true
+  namespace: kube-system
+    
+## Configuring Kubelet Monitoring
+kubelet:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    
+## Kube API
+## Configuring Kube API monitoring
+kubeApiServer:
+  enabled: true
+  serviceMonitor:
+    # Enable Service Monitor
+    enabled: true
+    
+## Kube Controller Manager
+kubeControllerManager:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+
+## Etcd monitoring
+kubeEtcd:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+
+## Kube Scheduler
+kubeScheduler:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+
+kubeProxy:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    
+## Core DNS monitoring
+##
+coreDns:
+  enabled: true
+  # Creates headless service to get accest to all coreDNS Pods
+  service:
+    enabled: true
+    port: 9153
+  # Enable service monitor
+  serviceMonitor:
+    enabled: true

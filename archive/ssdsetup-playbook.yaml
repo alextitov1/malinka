@@ -1,0 +1,20 @@
+---
+- name: Setup SSD storage
+  hosts: '{{ host | default("none") }}'
+  gather_facts: false
+
+  roles:
+    - storage
+
+  # tasks:
+  #   - name: Ensure /var/lib/containers has correct SELinux label
+  #     community.general.sefcontext:
+  #       target: '/var/lib/containers(/.*)?'
+  #       setype: container_var_lib_t
+  #       state: present
+  #     notify: Restorecon
+
+  # handlers:
+  #   - name: Restorecon
+  #     ansible.builtin.command: restorecon -irv /var/lib/containers
+  #     changed_when: false

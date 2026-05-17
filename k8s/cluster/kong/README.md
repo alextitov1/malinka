@@ -52,7 +52,7 @@ helm uninstall kong-dp -n kong || true
    helm upgrade --install kong-gw-01 kong/kong \
      -n kong \
      -f k8s/cluster/kong/values-enterprise-gw.yaml \
-     --version 3.1.0
+     --version 3.2.0
    ```
 
 5. Install the KIC controller-only release:
@@ -61,26 +61,16 @@ helm uninstall kong-dp -n kong || true
    helm upgrade --install kong-kic-01 kong/kong \
      -n kong \
      -f k8s/cluster/kong/values-enterprise-kic.yaml \
-     --version 3.1.0
+     --version 3.2.0
    ```
 
 6. Apply Gateway API resources:
 
     ```bash
     kubectl apply -f k8s/cluster/kong/gateway.yaml
-    kubectl apply -f k8s/cluster/kong/admin-httproute.yaml
-    kubectl apply -f k8s/cluster/kong/manager-httproute.yaml
+    kubectl apply -f k8s/cluster/kong/certificate.yaml
+    kubectl apply -f k8s/cluster/kong/http-routes.yaml
     ```
-
-7. Scale independently:
-
-   ```bash
-   # scale Gateway proxy pods
-   kubectl scale deploy/kong-kong -n kong --replicas=5
-
-   # scale KIC controller pods
-   kubectl scale deploy/kong-kic -n kong --replicas=2
-   ```
 
 
 # Other Kong Deployment Options
@@ -170,12 +160,12 @@ CP is database-backed (Postgres), and DP connects to CP over mTLS.
    helm upgrade --install kong-cp kong/kong \
      -n kong \
      -f k8s/cluster/kong/values-enterprise-cp.yaml \
-     --version 3.1.0
+     --version 3.2.0
 
    helm upgrade --install kong-dp kong/kong \
      -n kong \
      -f k8s/cluster/kong/values-enterprise-dp.yaml \
-     --version 3.1.0
+     --version 3.2.0
    ```
 
 7. Verify:

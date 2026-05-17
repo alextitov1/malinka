@@ -1,10 +1,10 @@
 ---
 all:
   hosts:
-    # malinka1:
-    #   ansible_host: malinka1.lan
-    # malinka2:
-    #   ansible_host: malinka2.lan
+    malinka1:
+      ansible_host: malinka1.lan
+    malinka2:
+      ansible_host: malinka2.lan
     malinka3:
       ansible_host: malinka3.lan
     vaio1:
@@ -16,6 +16,10 @@ raspberries:
   hosts:
     # malinka2:
     malinka3:
+
+zfs_hosts:
+  hosts:
+    malinka1:
 
 servers:
   hosts:

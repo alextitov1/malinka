@@ -77,8 +77,17 @@ spec:
       labels:
         app: qbittorrent
     spec:
-      nodeSelector:
-        kubernetes.io/hostname: malinka3
+      # nodeSelector:
+      #   kubernetes.io/hostname: malinka3
+      initContainers:
+        - name: init-config
+          image: busybox:latest
+          command: ['sh', '-c', 'mkdir -p /config/qBittorrent && cp -f /tmp/config/qbittorrent.conf /config/qBittorrent/qBittorrent.conf || true && chown -R 911:1000 /config']
+          volumeMounts:
+            - name: qbittorrent-data
+              mountPath: /config
+            - name: qbittorrent-config
+              mountPath: /tmp/config
       containers:
         - name: qbittorrent
           image: lscr.io/linuxserver/qbittorrent:latest
@@ -92,15 +101,7 @@ spec:
           volumeMounts:
             - mountPath: /downloads
               name: downloads
-            - mountPath: /config/qBittorrent.conf
-              name: qbittorrent-config
-              subPath: qbittorrent.conf
-              readOnly: false
-            - mountPath: /config/qBittorrent/qBittorrent.conf
-              name: qbittorrent-config
-              subPath: qbittorrent.conf
-              readOnly: false
-            - mountPath: /config/qBittorrent/
+            - mountPath: /config
               name: qbittorrent-data
       volumes:
         - name: downloads
@@ -120,7 +121,7 @@ metadata:
   namespace: mediaserver
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   storageClassName: zfs-nfs
   resources:
     requests:
@@ -183,7 +184,7 @@ data:
     General\Locale=en
     MailNotification\req_auth=true
     WebUI\Address=*
-    WebUI\AuthSubnetWhitelist=192.168.0.0/16
+    WebUI\AuthSubnetWhitelist=192.168.0.0/16, 10.0.0.0/8
     WebUI\AuthSubnetWhitelistEnabled=true
     WebUI\CSRFProtection=false
     WebUI\ClickjackingProtection=false

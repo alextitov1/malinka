@@ -36,8 +36,8 @@ spec:
       labels:
         app: smb-server
     spec:
-      nodeSelector:
-        kubernetes.io/hostname: malinka3
+      # nodeSelector:
+      #   kubernetes.io/hostname: malinka3
       containers:
         - name: samba
           image: docker.io/dperson/samba:latest

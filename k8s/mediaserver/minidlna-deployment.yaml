@@ -1,43 +1,43 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: minidlna-deployment
-  namespace: mediaserver
-  labels:
-    app: minidlna
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: minidlna
-  template:
-    metadata:
-      labels:
-        app: minidlna
-    spec:
-      hostNetwork: true
-      dnsPolicy: ClusterFirstWithHostNet
-      containers:
-        - name: minidlna
-          image: vladgh/minidlna:latest
-          ports:
-            - name: http
-              containerPort: 8200
-              protocol: TCP
-            - name: ssdp
-              containerPort: 1900
-              protocol: UDP
-          env:
-            - name: MINIDLNA_MEDIA_DIR
-              value: /media
-            - name: MINIDLNA_FRIENDLY_NAME
-              value: Malinka
-            - name: MINIDLNA_NOTIFY_INTERVAL
-              value: "30"
-          volumeMounts:
-            - name: media
-              mountPath: /media
-      volumes:
-        - name: media
-          persistentVolumeClaim:
-            claimName: samba-transmission-pvc
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: minidlna-deployment
+#   namespace: mediaserver
+#   labels:
+#     app: minidlna
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: minidlna
+#   template:
+#     metadata:
+#       labels:
+#         app: minidlna
+#     spec:
+#       hostNetwork: true
+#       dnsPolicy: ClusterFirstWithHostNet
+#       containers:
+#         - name: minidlna
+#           image: vladgh/minidlna:latest
+#           ports:
+#             - name: http
+#               containerPort: 8200
+#               protocol: TCP
+#             - name: ssdp
+#               containerPort: 1900
+#               protocol: UDP
+#           env:
+#             - name: MINIDLNA_MEDIA_DIR
+#               value: /media
+#             - name: MINIDLNA_FRIENDLY_NAME
+#               value: Malinka
+#             - name: MINIDLNA_NOTIFY_INTERVAL
+#               value: "30"
+#           volumeMounts:
+#             - name: media
+#               mountPath: /media
+#       volumes:
+#         - name: media
+#           persistentVolumeClaim:
+#             claimName: samba-transmission-pvc

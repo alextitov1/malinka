@@ -11,3 +11,5 @@ inventory/artifacts/
 observability/backups/*
 
 sandpit/
+
+.secrets/

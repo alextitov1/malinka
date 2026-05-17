@@ -46,5 +46,5 @@ etcd:
 kube_node:
   hosts:
     # malinka1:
-    # malinka2:
+    malinka2:
     malinka3:

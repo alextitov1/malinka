@@ -1,0 +1,28 @@
+csiDriver:
+  name: "org.democratic-csi.zfs-nfs"
+
+driver:
+  config:
+    driver: zfs-generic-nfs
+    sshConnection:
+      host: malinka1.lan
+      port: 22
+      username: root
+      privateKey: |
+        -----BEGIN OPENSSH PRIVATE KEY-----
+        b<<<past ssh key here>>>>==
+        -----END OPENSSH PRIVATE KEY-----
+
+    zfs:
+      datasetParentName: storage/malinka-k8s
+      detachedSnapshotsDatasetParentName: storage/malinka-k8s-snaps
+      datasetEnableQuotas: true
+      datasetProperties:
+        "sharenfs": "rw,no_root_squash"
+    nfs:
+      shareHost: malinka1.lan
+      shareStrategySetDatasetProperties:
+        properties:
+          #sharenfs: "rw,no_subtree_check,no_root_squash"
+          sharenfs: "on"
+          # share: ""

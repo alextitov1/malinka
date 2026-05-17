@@ -105,7 +105,7 @@ spec:
       volumes:
         - name: downloads
           persistentVolumeClaim:
-            claimName: mediaserver-shared-pv
+            claimName: mediaserver-shared-pvc
         - name: qbittorrent-config
           configMap:
             name: qbittorrent-config

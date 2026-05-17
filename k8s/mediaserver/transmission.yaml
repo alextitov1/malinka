@@ -117,10 +117,7 @@ spec:
             name: transmission-config
         - name: mediaserver-shared
           persistentVolumeClaim:
-            claimName: mediaserver-shared-pv
-        # - name: watch
-        #   persistentVolumeClaim:
-        #     claimName: mediaserver-shared-pv
+            claimName: mediaserver-shared-pvc
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

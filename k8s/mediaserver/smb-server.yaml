@@ -62,4 +62,4 @@ spec:
       volumes:
         - name: mediaserver-shared
           persistentVolumeClaim:
-            claimName: mediaserver-shared-pv
+            claimName: mediaserver-shared-pvc

@@ -1,10 +1,7 @@
 gateway_api_enabled: true
 
-
 # Metrics Server deployment
 metrics_server_enabled: true
-
-
 
 # Cert manager deployment
 cert_manager_enabled: true
@@ -13,6 +10,7 @@ cert_manager_version: "1.19.4"
 
 # MetalLB deployment
 metallb_enabled: true
+
 metallb_speaker_enabled: "{{ metallb_enabled }}"
 metallb_namespace: "metallb-system"
 
@@ -20,7 +18,15 @@ metallb_config:
   address_pools:
     primary:
       ip_range:
-        - 192.168.88.240-192.168.88.245
+        - 10.100.2.0/24
 
-  layer2:
-    - primary
+  layer3:
+    defaults:
+      peer_port: 179
+    metallb_peers:
+      mikrotik:
+        peer_address: 10.100.1.1
+        peer_asn: 65530
+        my_asn: 64512
+        address_pool:
+          - primary

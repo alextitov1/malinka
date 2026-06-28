@@ -4,7 +4,7 @@
   gather_facts: false
 
   vars:
-    secret_file: ../vars/secrets.yaml  # <== op_sa_malinka
+    secret_file: "{{ playbook_dir }}/../../../vars/secrets.yaml"  # <== op_sa_malinka
     host_root_pass: >-
       {{ lookup(
             'community.general.onepassword',
@@ -19,10 +19,6 @@
     - name: Load secret variables from file "{{ secret_file }}"
       ansible.builtin.include_vars:
         file: "{{ secret_file }}"
-
-    # - name: Check variables name
-    #   ansible.builtin.debug:
-    #     msg: "The password is {{ host_root_pass }}"
 
     - name: Ensure ansible user present and configured
       when: ansible_user != 'ansible'

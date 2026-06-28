@@ -1,25 +1,40 @@
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: mediaserver-shared-pv
-spec:
-  capacity:
-    storage: 155Gi
-  volumeMode: Filesystem
-  accessModes:
-    - ReadWriteMany
-  persistentVolumeReclaimPolicy: Retain
-  storageClassName: zfs-nfs
-  csi:
-    driver: org.democratic-csi.zfs-nfs
-    volumeHandle: pvc-bd169f1f-451e-4f7e-8221-774140d181bf
-    fsType: nfs
-    volumeAttributes:
-      node_attach_driver: nfs
-      provisioner_driver: zfs-generic-nfs
-      server: malinka1.lan
-      share: /storage/malinka-k8s/pvc-bd169f1f-451e-4f7e-8221-774140d181bf
+# ---
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: mediaserver-shared-pv
+# spec:
+#   capacity:
+#     storage: 155Gi
+#   volumeMode: Filesystem
+#   accessModes:
+#     - ReadWriteMany
+#   persistentVolumeReclaimPolicy: Retain
+#   storageClassName: zfs-nfs
+#   csi:
+#     driver: org.democratic-csi.zfs-nfs
+#     volumeHandle: pvc-bd169f1f-451e-4f7e-8221-774140d181bf
+#     fsType: nfs
+#     volumeAttributes:
+#       node_attach_driver: nfs
+#       provisioner_driver: zfs-generic-nfs
+#       server: malinka1.lan
+#       share: /storage/malinka-k8s/pvc-bd169f1f-451e-4f7e-8221-774140d181bf
+# ---
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#   name: mediaserver-shared-pvc
+#   namespace: mediaserver
+# spec:
+#   accessModes:
+#     - ReadWriteMany
+#   storageClassName: zfs-nfs
+#   resources:
+#     requests:
+#       storage: 101Gi
+#   # volumeName: pvc-bd169f1f-451e-4f7e-8221-774140d181bf
+#   volumeName: mediaserver-shared-pv
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -29,9 +44,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteMany
-  storageClassName: zfs-nfs
+  storageClassName: ceph-filesystem
   resources:
     requests:
-      storage: 155Gi
-  # volumeName: pvc-bd169f1f-451e-4f7e-8221-774140d181bf
-  volumeName: mediaserver-shared-pv
+      storage: 101Gi

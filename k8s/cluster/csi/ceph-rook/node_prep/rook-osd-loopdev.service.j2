@@ -1,0 +1,14 @@
+[Unit]
+Description=Attach Rook OSD loop device
+After=local-fs.target
+Requires=local-fs.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=-/usr/sbin/losetup -d {{ osd_loop_device }}
+ExecStart=/usr/sbin/losetup {{ osd_loop_device }} {{ osd_file }}
+ExecStop=/usr/sbin/losetup -d {{ osd_loop_device }}
+
+[Install]
+WantedBy=multi-user.target

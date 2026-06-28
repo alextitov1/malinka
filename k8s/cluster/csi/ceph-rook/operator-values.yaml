@@ -1,0 +1,166 @@
+# Rook-Ceph Operator Helm values
+# Tailored for a small ARM-based cluster (Raspberry Pi nodes)
+
+# -- Enable loop devices for file-backed OSDs
+allowLoopDevices: true
+
+# -- Install the Ceph CSI operator subchart so it can reconcile CSI Driver resources
+csi:
+  installCsiOperator: true
+
+  # The ceph-csi-operator consumes these resource templates when it creates
+  # the actual RBD/CephFS provisioner and nodeplugin workloads.
+  # -- Resources for the CSI RBD plugin
+  csiRBDPluginResource: |
+    - name: driver-registrar
+      resource:
+        requests:
+          cpu: 25m
+          memory: 32Mi
+        limits:
+          memory: 64Mi
+    - name: csi-rbdplugin
+      resource:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          memory: 256Mi
+    - name: liveness-prometheus
+      resource:
+        requests:
+          cpu: 25m
+          memory: 32Mi
+        limits:
+          memory: 64Mi
+
+  # -- Resources for the CSI RBD provisioner
+  csiRBDProvisionerResource: |
+    - name: csi-provisioner
+      resource:
+        requests:
+          cpu: 25m
+          memory: 32Mi
+        limits:
+          memory: 64Mi
+    - name: csi-resizer
+      resource:
+        requests:
+          cpu: 25m
+          memory: 32Mi
+        limits:
+          memory: 64Mi
+    - name: csi-attacher
+      resource:
+        requests:
+          cpu: 25m
+          memory: 32Mi
+        limits:
+          memory: 64Mi
+    - name: csi-snapshotter
+      resource:
+        requests:
+          cpu: 25m
+          memory: 32Mi
+        limits:
+          memory: 64Mi
+    - name: csi-rbdplugin
+      resource:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          memory: 256Mi
+    - name: liveness-prometheus
+      resource:
+        requests:
+          cpu: 25m
+          memory: 32Mi
+        limits:
+          memory: 64Mi
+
+  # -- Resources for the CephFS plugin
+  csiCephFSPluginResource: |
+    - name: driver-registrar
+      resource:
+        requests:
+          cpu: 25m
+          memory: 32Mi
+        limits:
+          memory: 64Mi
+    - name: csi-cephfsplugin
+      resource:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          memory: 256Mi
+    - name: liveness-prometheus
+      resource:
+        requests:
+          cpu: 25m
+          memory: 32Mi
+        limits:
+          memory: 64Mi
+
+  # -- Resources for the CephFS provisioner
+  csiCephFSProvisionerResource: |
+    - name: csi-provisioner
+      resource:
+        requests:
+          cpu: 25m
+          memory: 32Mi
+        limits:
+          memory: 64Mi
+    - name: csi-resizer
+      resource:
+        requests:
+          cpu: 25m
+          memory: 32Mi
+        limits:
+          memory: 64Mi
+    - name: csi-attacher
+      resource:
+        requests:
+          cpu: 25m
+          memory: 32Mi
+        limits:
+          memory: 64Mi
+    - name: csi-snapshotter
+      resource:
+        requests:
+          cpu: 25m
+          memory: 32Mi
+        limits:
+          memory: 64Mi
+    - name: csi-cephfsplugin
+      resource:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          memory: 256Mi
+    - name: liveness-prometheus
+      resource:
+        requests:
+          cpu: 25m
+          memory: 32Mi
+        limits:
+          memory: 64Mi
+
+  # -- Provisioner replicas (2 is fine for a 3-node cluster)
+  provisionerReplicas: 1
+
+# -- Disable flex driver (deprecated)
+# enableFlexDriver: false
+
+# -- Enable discovery daemon to detect available disks
+# enableDiscoveryDaemon: false
+
+# -- Resource limits for the operator (keep low for Raspberry Pi)
+resources:
+  limits:
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi

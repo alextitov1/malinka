@@ -1,0 +1,94 @@
+---
+# Ansible playbook to remove OSD backing files and loop device configuration
+# from all Kubernetes nodes for Rook-Ceph.
+#
+# Usage:
+#   ansible-playbook k8s/cluster/csi/ceph-rook/node_prep/teardown-osd-file.yaml
+#
+- name: Tear down file-backed OSD for Rook-Ceph
+  hosts: kube_node
+  become: true
+  vars:
+    osd_size_gb: 150
+    osd_dir: /var/lib/rook-OSDs
+    osd_file: /var/lib/rook-OSDs/osd-{{ osd_size_gb }}gb.img
+    osd_loop_device: /dev/loop10
+    osd_loop_service: rook-osd-loopdev.service
+    osd_loop_service_path: /etc/systemd/system/rook-osd-loopdev.service
+
+  tasks:
+    - name: Stop and disable loop device service
+      ansible.builtin.systemd:
+        name: "{{ osd_loop_service }}"
+        enabled: false
+        state: stopped
+      failed_when: false
+
+    - name: Find loop devices attached to OSD backing file
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          losetup -j {{ osd_file }} | cut -d: -f1
+        executable: /bin/bash
+      register: attached_loop_devices
+      changed_when: false
+      failed_when: false
+
+    - name: Detach loop devices attached to OSD backing file
+      ansible.builtin.command:
+        cmd: "losetup -d {{ item }}"
+      loop: "{{ attached_loop_devices.stdout_lines }}"
+      when: attached_loop_devices.stdout_lines | length > 0
+      register: detached_loop_devices
+      changed_when: true
+      failed_when: false
+
+    - name: Check configured loop device state
+      ansible.builtin.command:
+        cmd: "losetup {{ osd_loop_device }}"
+      register: configured_loop_device
+      changed_when: false
+      failed_when: false
+
+    - name: Detach configured loop device
+      ansible.builtin.command:
+        cmd: "losetup -d {{ osd_loop_device }}"
+      when: configured_loop_device.rc == 0
+      failed_when: false
+
+    - name: Remove loop device service unit
+      ansible.builtin.file:
+        path: "{{ osd_loop_service_path }}"
+        state: absent
+      register: loop_service_unit
+
+    - name: Reload systemd after removing loop device service unit
+      ansible.builtin.systemd:
+        daemon_reload: true
+      when: loop_service_unit.changed
+
+    - name: Remove OSD backing file
+      ansible.builtin.file:
+        path: "{{ osd_file }}"
+        state: absent
+
+    - name: Remove Rook data directory if present
+      ansible.builtin.file:
+        path: /var/lib/rook-cluster-01/
+        state: absent
+
+    - name: Check OSD directory contents
+      ansible.builtin.find:
+        paths: "{{ osd_dir }}"
+        file_type: any
+        hidden: true
+      register: osd_dir_contents
+      failed_when: false
+
+    - name: Remove OSD directory if empty
+      ansible.builtin.file:
+        path: "{{ osd_dir }}"
+        state: absent
+      when:
+        - osd_dir_contents is not failed
+        - osd_dir_contents.matched == 0

@@ -1,0 +1,89 @@
+#
+# Rook-Ceph Cluster manifest
+# Uses file-backed loop devices as OSDs (180 GiB per node).
+# Each node exposes /var/lib/rook-osd/osd.img via a loop device.
+#
+apiVersion: ceph.rook.io/v1
+kind: CephCluster
+metadata:
+  name: rook-ceph
+  namespace: rook-ceph
+spec:
+  cephVersion:
+    # -- Use a recent stable Ceph release
+    image: quay.io/ceph/ceph:v20.2
+    allowUnsupported: false
+
+  dataDirHostPath: /var/lib/rook-cluster-01
+
+  mon:
+    # -- Run 3 monitors for HA on a 3-node cluster
+    count: 3
+    allowMultiplePerNode: false
+
+  mgr:
+    count: 1
+    allowMultiplePerNode: false
+    modules:
+      - name: pg_autoscaler
+        enabled: true
+
+  dashboard:
+    enabled: true
+    ssl: false
+
+  # -- Crash collector for automatic crash reporting
+  crashCollector:
+    disable: false
+
+  # -- Resource limits for Ceph daemons (tuned for Raspberry Pi)
+  resources:
+    mon:
+      limits:
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    mgr:
+      limits:
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    osd:
+      limits:
+        memory: 2048Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+
+  storage:
+    # -- Do NOT use all nodes/devices automatically
+    useAllNodes: false
+    useAllDevices: false
+
+    # -- File-backed OSDs via loop devices
+    # The loop device path may vary (/dev/loop0, /dev/loop1, etc.).
+    # Use the devicePathFilter to match any loop device that is backed
+    # by the osd.img file. Rook discovers loop devices automatically.
+    nodes:
+      - name: malinka1
+        devices:
+          - name: loop10
+      - name: malinka2
+        devices:
+          - name: loop10
+      - name: malinka3
+        devices:
+          - name: loop10
+
+    # -- NOTE: If loop device numbers differ per node, update the
+    #    device names above accordingly. Run `losetup -a` on each
+    #    node to find the correct /dev/loopX device.
+
+  # -- Placement: spread daemons across all nodes
+  placement:
+    all:
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists

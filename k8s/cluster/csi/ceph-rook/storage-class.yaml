@@ -1,0 +1,90 @@
+# # CephBlockPool – replicated across all 3 nodes
+# apiVersion: ceph.rook.io/v1
+# kind: CephBlockPool
+# metadata:
+#   name: replicapool
+#   namespace: rook-ceph
+# spec:
+#   failureDomain: host
+#   replicated:
+#     size: 3
+#     requireSafeReplicaSize: true
+# ---
+# # StorageClass backed by the CephBlockPool
+# apiVersion: storage.k8s.io/v1
+# kind: StorageClass
+# metadata:
+#   name: ceph-block
+#   annotations:
+#     storageclass.kubernetes.io/is-default-class: "false"
+# provisioner: rook-ceph.rbd.csi.ceph.com
+# parameters:
+#   clusterID: rook-ceph
+#   pool: replicapool
+#   imageFormat: "2"
+#   imageFeatures: layering
+
+#   # -- CSI provisioner secret references
+#   csi.storage.k8s.io/provisioner-secret-name: rook-csi-rbd-provisioner
+#   csi.storage.k8s.io/provisioner-secret-namespace: rook-ceph
+#   csi.storage.k8s.io/controller-expand-secret-name: rook-csi-rbd-provisioner
+#   csi.storage.k8s.io/controller-expand-secret-namespace: rook-ceph
+#   csi.storage.k8s.io/node-stage-secret-name: rook-csi-rbd-node
+#   csi.storage.k8s.io/node-stage-secret-namespace: rook-ceph
+#   csi.storage.k8s.io/fstype: ext4
+# reclaimPolicy: Retain
+# allowVolumeExpansion: true
+# volumeBindingMode: Immediate
+---
+# CephFilesystem – shared filesystem via CephFS
+apiVersion: ceph.rook.io/v1
+kind: CephFilesystem
+metadata:
+  name: cephfs
+  namespace: rook-ceph
+spec:
+  metadataPool:
+    failureDomain: host
+    replicated:
+      size: 3
+    parameters:
+      min_size: "2"
+  dataPools:
+    - name: cephfs-data0
+      failureDomain: host
+      replicated:
+        size: 3
+      parameters:
+        min_size: "2"
+  preserveFilesystemOnDelete: true
+  metadataServer:
+    activeCount: 1
+    activeStandby: true
+    resources:
+      limits:
+        memory: 4Gi
+      requests:
+        cpu: 100m
+        memory: 1Gi
+---
+# StorageClass backed by CephFS (ReadWriteMany support)
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ceph-filesystem
+provisioner: rook-ceph.cephfs.csi.ceph.com
+parameters:
+  clusterID: rook-ceph
+  fsName: cephfs
+
+  csi.storage.k8s.io/provisioner-secret-name: rook-csi-cephfs-provisioner
+  csi.storage.k8s.io/provisioner-secret-namespace: rook-ceph
+  csi.storage.k8s.io/controller-expand-secret-name: rook-csi-cephfs-provisioner
+  csi.storage.k8s.io/controller-expand-secret-namespace: rook-ceph
+  csi.storage.k8s.io/controller-publish-secret-name: rook-csi-cephfs-provisioner
+  csi.storage.k8s.io/controller-publish-secret-namespace: rook-ceph
+  csi.storage.k8s.io/node-stage-secret-name: rook-csi-cephfs-node
+  csi.storage.k8s.io/node-stage-secret-namespace: rook-ceph
+reclaimPolicy: Retain
+allowVolumeExpansion: true
+volumeBindingMode: Immediate

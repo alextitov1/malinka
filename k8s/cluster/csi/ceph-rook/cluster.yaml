@@ -69,6 +69,7 @@ spec:
     nodes:
       - name: malinka1
         devices:
+          - name: nvme1n1
           - name: loop10
       - name: malinka2
         devices:

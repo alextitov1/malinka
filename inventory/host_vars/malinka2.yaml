@@ -13,6 +13,9 @@ storage_pools:
         state: present
         fs_type: xfs
 
+node_labels:
+  hw: pi4
+
 # node_specific_packages:
 #   - podman
 #   - elrepo-release

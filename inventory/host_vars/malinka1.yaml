@@ -17,3 +17,6 @@ storage_pools:
         mount_point: /mnt/app_data
         state: present
         fs_type: xfs
+
+node_labels:
+  hw: pi4

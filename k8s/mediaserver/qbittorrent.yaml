@@ -159,6 +159,7 @@ data:
     Session\Port=51413
     Session\SSL\Port=51414
     Session\RequestQueueSize=5000
+    Session\MultiConnectionsPerIp=true
 
     [Core]
     AutoDeleteAddedTorrentFile=Never

@@ -35,3 +35,8 @@ kubectl apply -f k8s/cluster/cert-manager/.
 cat k8s/cluster/kong/README.md
 ```
 
+#### References
+
+```sh
+ansible-playbook -i inventory/hosts playbooks/kubespray/kubespray-playbook.yaml --tags metallb
+```

@@ -17,8 +17,8 @@ spec:
   dataDirHostPath: /var/lib/rook-cluster-01
 
   mon:
-    # -- Run 3 monitors for HA on a 3-node cluster
-    count: 3
+    # -- Run a single monitor; this does not provide MON high availability
+    count: 1
     allowMultiplePerNode: false
 
   mgr:
@@ -82,9 +82,19 @@ spec:
     #    device names above accordingly. Run `losetup -a` on each
     #    node to find the correct /dev/loopX device.
 
-  # -- Placement: spread daemons across all nodes
+  # -- Placement: tolerate taints and prefer the Pi 5 for the monitor
   placement:
     all:
       tolerations:
         - effect: NoSchedule
           operator: Exists
+    mon:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+                - key: hw
+                  operator: In
+                  values:
+                    - pi5

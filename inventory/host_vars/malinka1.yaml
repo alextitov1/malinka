@@ -19,4 +19,4 @@ storage_pools:
         fs_type: xfs
 
 node_labels:
-  hw: pi4
+  hw: pi5

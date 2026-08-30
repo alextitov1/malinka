@@ -8,6 +8,18 @@ image:
 # Number of Gateway pods (proxy/data plane).
 replicaCount: 1
 
+# Prefer Raspberry Pi 5 nodes while still allowing Pi 4 nodes as fallback.
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        preference:
+          matchExpressions:
+            - key: hw
+              operator: In
+              values:
+                - pi5
+
 enterprise:
   enabled: true
   # Refers to the secret containing the Kong Enterprise license

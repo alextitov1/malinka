@@ -36,8 +36,16 @@ spec:
       labels:
         app: smb-server
     spec:
-      # nodeSelector:
-      #   kubernetes.io/hostname: malinka3
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: hw
+                    operator: In
+                    values:
+                      - pi5
       containers:
         - name: samba
           image: docker.io/dperson/samba:latest
@@ -49,6 +57,20 @@ spec:
             - name: smb
               containerPort: 445
               protocol: TCP
+          readinessProbe:
+            tcpSocket:
+              port: smb
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            tcpSocket:
+              port: smb
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
           env:
             - name: USER1
               value: alex;change-me

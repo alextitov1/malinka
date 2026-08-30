@@ -69,6 +69,8 @@ metadata:
   namespace: mediaserver
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: qbittorrent
@@ -77,8 +79,16 @@ spec:
       labels:
         app: qbittorrent
     spec:
-      # nodeSelector:
-      #   kubernetes.io/hostname: malinka3
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: hw
+                    operator: In
+                    values:
+                      - pi5
       initContainers:
         - name: init-config
           image: busybox:latest
@@ -91,6 +101,36 @@ spec:
       containers:
         - name: qbittorrent
           image: lscr.io/linuxserver/qbittorrent:latest
+          ports:
+            - name: webui
+              containerPort: 8080
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /
+              port: webui
+              scheme: HTTP
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 24
+          readinessProbe:
+            httpGet:
+              path: /
+              port: webui
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: webui
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
           resources:
             requests:
               memory: "256Mi"
@@ -190,8 +230,7 @@ data:
     WebUI\CSRFProtection=false
     WebUI\ClickjackingProtection=false
     WebUI\HostHeaderValidation=false
-    WebUI\Port=30001
-    WebUI\RootFolder=/qb
+    WebUI\Port=8080
     WebUI\ReverseProxySupportEnabled=true
     WebUI\TrustedReverseProxiesList=10.0.0.0/8
     WebUI\ServerDomains=*

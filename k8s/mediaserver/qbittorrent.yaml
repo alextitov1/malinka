@@ -4,16 +4,24 @@ metadata:
   name: qbittorrent-route
   namespace: mediaserver
   annotations:
-    konghq.com/strip-path: "true"
+    konghq.com/strip-path: "false"
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: qBittorrent
+    gethomepage.dev/description: Torrent client
+    gethomepage.dev/group: Media
+    gethomepage.dev/icon: qbittorrent.png
+    gethomepage.dev/pod-selector: app=qbittorrent
 spec:
   parentRefs:
     - name: kong-gw-01
       namespace: kong
+  hostnames:
+    - qb.k.4esnok.su
   rules:
     - matches:
         - path:
             type: PathPrefix
-            value: /qb
+            value: /
       backendRefs:
         - name: qbittorrent-service
           port: 30001

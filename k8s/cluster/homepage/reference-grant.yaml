@@ -1,0 +1,17 @@
+# The Gateway lives in the kong namespace; this grants routes in the homepage
+# namespace the right to attach to it. Only needed if the Gateway's listeners
+# are ever narrowed from "namespaces: from: All" - kept here for that day.
+#
+# apiVersion: gateway.networking.k8s.io/v1beta1
+# kind: ReferenceGrant
+# metadata:
+#   name: homepage-to-kong-gw
+#   namespace: kong
+# spec:
+#   from:
+#     - group: gateway.networking.k8s.io
+#       kind: HTTPRoute
+#       namespace: homepage
+#   to:
+#     - group: ""
+#       kind: Service

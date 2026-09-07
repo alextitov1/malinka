@@ -6,8 +6,8 @@ alertmanager:
   alertmanagerSpec:
     ##
     ## Configure access to AlertManager via dedicated hostname
-    externalUrl: https://k.4esnok.su/alertmanager
-    routePrefix: /alertmanager
+    externalUrl: https://alertmanager.k.4esnok.su
+    routePrefix: /
     ##
     ## HA configuration: Replicas
     ## Number of Alertmanager POD replicas
@@ -27,13 +27,21 @@ alertmanager:
   route:
     main:
       enabled: true
+      annotations:
+        gethomepage.dev/enabled: "true"
+        gethomepage.dev/name: Alertmanager
+        gethomepage.dev/description: Alert routing
+        gethomepage.dev/group: Cluster
+        gethomepage.dev/icon: alertmanager.png
+      hostnames:
+        - alertmanager.k.4esnok.su
       parentRefs:
         - name: kong-gw-01
           namespace: kong
       matches:
         - path:
             type: PathPrefix
-            value: /alertmanager
+            value: /
     
 # Prometheus configuration
 prometheus:
@@ -57,8 +65,8 @@ prometheus:
     ##
     ## Configure access to Prometheus via dedicated hostname
     ## --web.external-url Prometheus command line parameter
-    externalUrl: https://k.4esnok.su/prometheus
-    routePrefix: /prometheus
+    externalUrl: https://prometheus.k.4esnok.su
+    routePrefix: /
     ##
     ## HA configuration: Replicas & Shards
     ## Number of replicas of each shard to deploy for a Prometheus deployment.
@@ -102,13 +110,21 @@ prometheus:
   route:
     main:
       enabled: true
+      annotations:
+        gethomepage.dev/enabled: "true"
+        gethomepage.dev/name: Prometheus
+        gethomepage.dev/description: Metrics
+        gethomepage.dev/group: Cluster
+        gethomepage.dev/icon: prometheus.png
+      hostnames:
+        - prometheus.k.4esnok.su
       parentRefs:
         - name: kong-gw-01
           namespace: kong
       matches:
         - path:
             type: PathPrefix
-            value: /prometheus
+            value: /
     
 # Prometheus Node Exporter Configuration
 prometheus-node-exporter:
@@ -134,9 +150,9 @@ grafana:
   # grafana configuration
   grafana.ini:
     server:
-      domain: k.4esnok.su
-      root_url: "https://%(domain)s/grafana/"
-      serve_from_sub_path: true
+      domain: grafana.k.4esnok.su
+      root_url: "https://%(domain)s/"
+      serve_from_sub_path: false
   ##
   ## Provisioning sidecars
   ##
@@ -169,13 +185,21 @@ grafana:
       enabled: true
       apiVersion: gateway.networking.k8s.io/v1
       kind: HTTPRoute
+      annotations:
+        gethomepage.dev/enabled: "true"
+        gethomepage.dev/name: Grafana
+        gethomepage.dev/description: Dashboards
+        gethomepage.dev/group: Cluster
+        gethomepage.dev/icon: grafana.png
+      hostnames:
+        - grafana.k.4esnok.su
       parentRefs:
         - name: kong-gw-01
           namespace: kong
       matches:
         - path:
             type: PathPrefix
-            value: /grafana
+            value: /
 
 # Kubernetes Monitoring
 ## Kubelet

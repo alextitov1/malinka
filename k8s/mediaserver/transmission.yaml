@@ -5,10 +5,18 @@ metadata:
   namespace: mediaserver
   annotations:
     konghq.com/strip-path: "false"
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: Transmission
+    gethomepage.dev/description: Torrent client (legacy)
+    gethomepage.dev/group: Media
+    gethomepage.dev/icon: transmission.png
+    gethomepage.dev/pod-selector: app=transmission
 spec:
   parentRefs:
     - name: kong-gw-01
       namespace: kong
+  hostnames:
+    - transmission.k.4esnok.su
   rules:
     - matches:
         - path:

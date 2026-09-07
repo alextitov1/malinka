@@ -13,15 +13,28 @@ Everything here moves apps from paths (`k.4esnok.su/qb`) to subdomains
 k.4esnok.su.    A    10.100.2.200     # kong-gw-01-kong-proxy
 ```
 
-Add a wildcard record in Cloudflare pointing at the same LoadBalancer IP,
-**before applying anything below**:
+These names are served by the **MikroTik at 192.168.88.1**, not publicly:
+`4esnok.su` delegates to Cloudflare nameservers only so cert-manager can solve
+the ACME DNS-01 challenge, and `1.1.1.1` returns nothing for `k.4esnok.su`.
+
+Extend the existing apex entry to cover subdomains, **before applying anything
+below**. One record does both - `match-subdomain=yes` extends the record's own
+`name` rather than replacing it (RouterOS 7.x):
 
 ```
-*.k.4esnok.su.  A    10.100.2.200
+/ip dns static print detail where name~"4esnok"
+/ip dns static set [find name="k.4esnok.su"] address=10.100.2.200 match-subdomain=yes
+/ip dns cache flush
 ```
+
+Verify: `dig @192.168.88.1 qb.k.4esnok.su +short`
 
 The existing `wildcard-4esnok-su` Certificate already covers `*.k.4esnok.su`,
 so no cert-manager change is needed.
+
+Note this resolves only for clients using the MikroTik as their resolver. The
+certificate is publicly trusted but the names are not publicly resolvable, so
+these URLs do not work off-LAN, or on a device using DNS-over-HTTPS.
 
 ## Why subdomains
 

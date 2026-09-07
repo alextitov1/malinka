@@ -17,7 +17,7 @@ alertmanager:
     storage:
       volumeClaimTemplate:
         spec:
-          storageClassName: zfs-nfs
+          storageClassName: ceph-fs-3-2
           accessModes: ["ReadWriteOnce"]
           resources:
             requests:
@@ -89,7 +89,7 @@ prometheus:
     storageSpec:
       volumeClaimTemplate:
         spec:
-          storageClassName: zfs-nfs
+          storageClassName: ceph-fs-3-2
           accessModes: ["ReadWriteOnce"]
           resources:
             requests:

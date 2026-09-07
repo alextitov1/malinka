@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homepage-config
+  namespace: homepage
+data:
+  # Services are discovered from annotated HTTPRoutes, not listed here.
+  # See k8s/cluster/homepage/README.md for the annotation contract.
+  services.yaml: ""
+  docker.yaml: ""
+  custom.css: ""
+  custom.js: ""
+
+  kubernetes.yaml: |
+    mode: cluster
+    gateway: true
+
+  settings.yaml: |
+    title: malinka
+    description: lab services
+    theme: dark
+    color: slate
+    headerStyle: clean
+    statusStyle: dot
+    hideVersion: true
+    layout:
+      Cluster:
+        style: row
+        columns: 3
+      Media:
+        style: row
+        columns: 3
+
+  bookmarks.yaml: |
+    - Repo:
+        - malinka:
+            - abbr: ML
+              href: https://github.com/4esnok/malinka
+
+  widgets.yaml: |
+    - search:
+        provider: duckduckgo
+        target: _blank
+    # cpu/memory come from metrics-server (v1beta1.metrics.k8s.io), which is
+    # available in this cluster.
+    - kubernetes:
+        cluster:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+          label: malinka
+        nodes:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true

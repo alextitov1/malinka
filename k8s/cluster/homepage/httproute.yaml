@@ -1,0 +1,24 @@
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: homepage-route
+  namespace: homepage
+  annotations:
+    konghq.com/strip-path: "false"
+    # Explicit opt-out: the dashboard does not list itself.
+    gethomepage.dev/enabled: "false"
+spec:
+  parentRefs:
+    - name: kong-gw-01
+      namespace: kong
+  hostnames:
+    - k.4esnok.su
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: homepage
+          port: 3000

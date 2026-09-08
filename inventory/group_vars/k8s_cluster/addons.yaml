@@ -8,25 +8,3 @@ cert_manager_enabled: true
 # Override the kubespray default versioncert_manager_namespace: "cert-manager"
 cert_manager_version: "1.19.4"
 
-# MetalLB deployment
-metallb_enabled: true
-
-metallb_speaker_enabled: "{{ metallb_enabled }}"
-metallb_namespace: "metallb-system"
-
-metallb_config:
-  address_pools:
-    primary:
-      ip_range:
-        - 10.100.2.0/24
-
-  layer3:
-    defaults:
-      peer_port: 179
-    metallb_peers:
-      mikrotik:
-        peer_address: 10.100.1.1
-        peer_asn: 65530
-        my_asn: 64512
-        address_pool:
-          - primary

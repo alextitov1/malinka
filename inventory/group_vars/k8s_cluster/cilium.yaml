@@ -1,0 +1,119 @@
+---
+# Cilium CNI configuration for kubespray.
+
+# --- CNI: Calico -> Cilium.  See docs/cilium-migration.md ---
+kube_network_plugin: cilium
+
+
+kube_pods_subnet: 10.234.0.0/16
+kube_network_node_prefix: 24
+
+# kubespray's default is 1.19.3; pin explicitly rather than drifting mid-migration.
+cilium_version: "1.20.1"
+cilium_cluster_name: malinka-cl
+cilium_operator_replicas: 1        # 3 nodes; 2 replicas cannot both schedule well
+cilium_enable_host_legacy_routing: true
+
+# Stage 2a. The earlier comment here claimed MetalLB announced nothing and that
+# kube-proxy IPVS was the only thing answering for the 10.100.2.0/24 LoadBalancer
+# IPs. That was wrong: MetalLB has always announced them over eBGP to the
+# MikroTik (verified on both sides). Replacing kube-proxy therefore does not
+# black-hole them -- the router's routes are BGP-learned and independent of what
+# handles the service datapath on the node.
+cilium_kube_proxy_replacement: true
+
+# nodelocaldns is deployed on all three nodes. Enabling kube-proxy replacement
+# otherwise makes Cilium turn on its transparent DNS proxy, which conflicts with
+# nodelocaldns (cilium/cilium#33144). Pin it off.
+cilium_dns_proxy_enable_transparent_mode: false
+
+cilium_enable_hubble: true
+cilium_enable_hubble_ui: true
+
+# Cilium's mount-cgroup, apply-sysctl-overwrites and install-cni-binaries init
+# containers copy helper binaries into /opt/cni/bin. kubespray creates that
+# directory owned by `kube_owner` (kube) with mode 0755, while those containers
+# run as root with capabilities dropped -- so root, not owning the directory,
+# lacks CAP_DAC_OVERRIDE and the copy fails with:
+#   cp: cannot create regular file '/hostbin/cilium-mount': Permission denied
+# The agent then never starts, the operator taints every node
+# node.cilium.io/agent-not-ready, and nothing new can schedule (this took
+# CoreDNS down once already). install-cni-binaries drops ALL capabilities and
+# has no per-container chart key, so the global privileged flag is the only
+# setting that covers all three.
+cilium_extra_values:
+  securityContext:
+    privileged: true
+  # cilium-envoy crashloops on these Pi kernels: its bundled tcmalloc assumes a
+  # 48-bit virtual address space and aborts with "MmapAligned() failed ...
+  # FATAL ERROR: Out of memory trying to allocate internal tcmalloc data".
+  # Nothing here needs it -- 0 CiliumEnvoyConfigs, 0 CiliumNetworkPolicies,
+  # 0 core NetworkPolicies, and Gateway API is served by Kong (kong-gc-01),
+  # not Cilium (its gateway-api and ingress-controller are both disabled).
+  envoy:
+    enabled: false
+
+
+# --- Stage 2b: Cilium BGP replaces MetalLB ---------------------------------
+# The MikroTik (router01, 10.100.1.1 on malinka-br) already has one eBGP
+# connection per node -- metallb_malinka1/2/3 -- expecting remote.as 64512 from
+# 10.100.1.101/102/103, with the router itself in AS 65530. Cilium must peer
+# with exactly those parameters so the existing router config keeps matching and
+# needs no changes.
+#
+# L2 announcement is NOT an option here: the LB range is not L2-adjacent to LAN
+# clients (traffic crosses 192.168.88.1 then router01 before reaching
+# 10.100.2.x), so ARP-based announcement cannot work. BGP is the only choice.
+cilium_enable_bgp_control_plane: true
+
+# Same range MetalLB used. Every service pins its address via
+# spec.loadBalancerIP, so the existing assignments are preserved -- including
+# 10.100.2.200 for Kong, which is what *.k.4esnok.su resolves to.
+cilium_loadbalancer_ip_pools:
+  - name: primary
+    cidrs:
+      - 10.100.2.0/24
+
+cilium_bgp_cluster_configs:
+  - name: malinka
+    spec:
+      nodeSelector:
+        matchLabels:
+          kubernetes.io/os: linux
+      bgpInstances:
+        - name: mikrotik
+          localASN: 64512
+          peers:
+            - name: router01
+              peerASN: 65530
+              peerAddress: 10.100.1.1
+              peerConfigRef:
+                name: router01
+
+cilium_bgp_peer_configs:
+  - name: router01
+    spec:
+      families:
+        - afi: ipv4
+          safi: unicast
+          advertisements:
+            matchLabels:
+              advertise: lb-ips
+
+cilium_bgp_advertisements:
+  - name: lb-ips
+    labels:
+      advertise: lb-ips
+    spec:
+      advertisements:
+        - advertisementType: Service
+          service:
+            addresses:
+              - LoadBalancerIP
+          # Cilium's documented "select every service" idiom.
+          selector:
+            matchExpressions:
+              - key: somekey
+                operator: NotIn
+                values:
+                  - never-used-value

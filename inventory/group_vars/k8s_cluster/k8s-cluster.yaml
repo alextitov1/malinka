@@ -4,7 +4,10 @@ kube_version: 1.35.2
 # Make a copy of kubeconfig on the host that runs Ansible in {{ inventory_dir }}/artifacts
 kubeconfig_localhost: true
 
-# Enable strict ARP for kube-proxy to ensure proper routing of traffic to MetalLB-assigned IPs
+# Was needed for MetalLB's L2 mode. MetalLB has been retired (LoadBalancer
+# announcement now comes from the Cilium BGP control plane) and kube-proxy
+# itself is gone, so this is inert -- kept only to avoid a surprise if either is
+# ever reintroduced. See inventory/group_vars/k8s_cluster/cilium.yaml
 kube_proxy_strict_arp: true
 
 
@@ -20,5 +23,7 @@ kubeadm_patches:
                 cpu: "250m"
                 memory: "256Mi"
               limits:
-                cpu: "500m"
-                memory: "1Gi"
+                memory: "2Gi"
+                # cpu: "1000m"
+
+# CNI (Cilium) configuration lives in cilium.yaml in this same directory.

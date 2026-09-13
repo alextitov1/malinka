@@ -1,0 +1,15 @@
+# malinka3's boot SSD ("SSD 240GB") sits behind a JMicron USB-SATA bridge that
+# misreports it. Matched by serial so the Hitachi USB HDD (sdb) is left alone.
+#
+# 1. The bridge reports the SSD as rotational, so Ceph would create the OSD on
+#    sda3 as an HDD (HDD BlueStore tuning, mclock capacity measured into
+#    osd_mclock_max_capacity_iops_hdd). Mark it non-rotational.
+# 2. The bridge supports SCSI UNMAP (VPD lbpv: LBPU=1) but READ CAPACITY(16)
+#    reports lbpme=0, so the kernel leaves provisioning_mode=full and TRIM off.
+#    Switch it to unmap, then cap discard requests at the bridge's limit of
+#    65535 LBAs per UNMAP (65535*512 rounded down to 4 KiB = 33550336 bytes);
+#    the kernel default (4 GiB) exceeds it.
+#
+# Install: /etc/udev/rules.d/99-malinka3-ssd.rules, then
+#   udevadm control --reload && udevadm trigger --action=change --sysname-match=sda
+ACTION=="add|change", SUBSYSTEM=="block", ENV{DEVTYPE}=="disk", ENV{ID_SERIAL}=="JMicron_Tech_000000778899-0:0", ATTR{queue/rotational}="0", RUN+="/bin/sh -c 'for f in /sys%p/device/scsi_disk/*/provisioning_mode; do grep -qx unmap $$f || echo unmap > $$f; done; echo 33550336 > /sys%p/queue/discard_max_bytes'"

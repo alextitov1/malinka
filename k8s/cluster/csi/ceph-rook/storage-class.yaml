@@ -37,17 +37,26 @@ spec:
         size: 2
       parameters:
         min_size: "1"
-    - name: cephfs-data-1-1
-      # failureDomain: host
-      replicated:
-        size: 1
-      # parameters:
-      #   min_size: "1"
+    # - name: cephfs-data-1-1
+    #   # failureDomain: host
+    #   replicated:
+    #     size: 1
+    #   # parameters:
+    #   #   min_size: "1"
   preserveFilesystemOnDelete: true
   metadataServer:
     activeCount: 1
     activeStandby: true
     placement:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+                - key: hw
+                  operator: In
+                  values:
+                    - pi5
       podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             - labelSelector:

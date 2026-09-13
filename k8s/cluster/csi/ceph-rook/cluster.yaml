@@ -1,7 +1,7 @@
 #
 # Rook-Ceph Cluster manifest
-# Uses file-backed loop devices as OSDs (180 GiB per node).
-# Each node exposes /var/lib/rook-osd/osd.img via a loop device.
+# OSDs are loop devices (150 GiB file on the root filesystem), raw boot-disk
+# partitions, or whole disks - see spec.storage.nodes below.
 #
 apiVersion: ceph.rook.io/v1
 kind: CephCluster
@@ -31,6 +31,26 @@ spec:
   dashboard:
     enabled: true
     ssl: false
+
+  # -- Ceph config options; Rook applies them with `ceph config set` on every
+  #    reconcile, so they survive a cluster rebuild.
+  cephConfig:
+    # malinka2's and malinka3's OSDs sit on cheap DRAM-less SSDs ("SSD 240GB")
+    # whose writes collapse when untrimmed, so BlueStore sends TRIM as it frees
+    # space. Discard must reach the disk first: malinka2's Realtek bridge passes
+    # it natively, malinka3's JMicron bridge needs node_prep/99-malinka3-ssd.rules.
+    #  * bdev_enable_discard: send discards to the block device.
+    #  * bdev_async_discard_threads: queue discards to background threads. With
+    #    the default 0, BlueStore discards inline while committing writes, which
+    #    stalls writes on these SSDs. (bdev_async_discard is the deprecated old name.)
+    # Keyed by OSD id (osd.0 = malinka2, osd.2 = malinka3): update if one of these
+    # OSDs is recreated with a new id. Restart the OSD after changing these.
+    osd.0:
+      bdev_enable_discard: "true"
+      bdev_async_discard_threads: "1"
+    osd.2:
+      bdev_enable_discard: "true"
+      bdev_async_discard_threads: "1"
 
   # -- Crash collector for automatic crash reporting
   crashCollector:
@@ -62,10 +82,13 @@ spec:
     useAllNodes: false
     useAllDevices: false
 
-    # -- File-backed OSDs via loop devices
-    # The loop device path may vary (/dev/loop0, /dev/loop1, etc.).
-    # Use the devicePathFilter to match any loop device that is backed
-    # by the osd.img file. Rook discovers loop devices automatically.
+    # -- OSD devices per node. Three kinds:
+    #  * loop10: a 150 GiB file on the root filesystem attached as a loop
+    #    device (nodes in the rook_loop_osd inventory group, see node_prep/).
+    #  * an LVM logical volume on partition 3 of the boot disk. ceph-volume
+    #    rejects USB-attached devices (reason "id_bus", from udev ID_BUS=usb),
+    #    so a raw USB partition is skipped; an LV carries no ID_BUS.
+    #  * a whole dedicated disk (malinka1's nvme1n1).
     nodes:
       - name: malinka1
         devices:
@@ -73,22 +96,34 @@ spec:
           - name: loop10
       - name: malinka2
         devices:
-          - name: loop10
+          # One LV filling VG malinka2_osd, whose only PV is sda3 on the USB SSD
+          # (Realtek RTL9201 bridge). Unlike malinka3's JMicron bridge, it reports
+          # the SSD as non-rotational and passes TRIM without a udev rule.
+          - name: /dev/malinka2_osd/sda3
       - name: malinka3
         devices:
-          - name: loop10
+          # One LV filling VG malinka3_osd, whose only PV is sda3 on the JMicron
+          # USB SSD. node_prep/99-malinka3-ssd.rules marks the disk
+          # non-rotational and enables TRIM (SCSI UNMAP) before LVM activates.
+          - name: /dev/malinka3_osd/sda3
 
-    # -- NOTE: If loop device numbers differ per node, update the
-    #    device names above accordingly. Run `losetup -a` on each
-    #    node to find the correct /dev/loopX device.
-
-  # -- Placement: tolerate taints and prefer the Pi 5 for the monitor
+  # -- Placement: tolerate taints and prefer the Pi 5 for monitors and managers
   placement:
     all:
       tolerations:
         - effect: NoSchedule
           operator: Exists
     mon:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+                - key: hw
+                  operator: In
+                  values:
+                    - pi5
+    mgr:
       nodeAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
           - weight: 100

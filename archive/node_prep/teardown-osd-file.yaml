@@ -1,12 +1,14 @@
 ---
 # Ansible playbook to remove OSD backing files and loop device configuration
-# from all Kubernetes nodes for Rook-Ceph.
+# from nodes in the rook_loop_osd inventory group for Rook-Ceph.
+# It also deletes the Rook data dir (/var/lib/rook-cluster-01), so on a node
+# that runs a mon, remove the mon first. Use --limit to target one node.
 #
 # Usage:
-#   ansible-playbook k8s/cluster/csi/ceph-rook/node_prep/teardown-osd-file.yaml
+#   ansible-playbook k8s/cluster/csi/ceph-rook/node_prep/teardown-osd-file.yaml --limit <node>
 #
 - name: Tear down file-backed OSD for Rook-Ceph
-  hosts: kube_node
+  hosts: rook_loop_osd
   become: true
   vars:
     osd_size_gb: 150

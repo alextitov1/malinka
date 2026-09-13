@@ -1,12 +1,12 @@
 ---
 # Ansible playbook to create OSD backing files and configure loop devices
-# on all Kubernetes nodes for Rook-Ceph.
+# on nodes in the rook_loop_osd inventory group for Rook-Ceph.
 #
 # Usage:
 #   ansible-playbook k8s/cluster/csi/ceph-rook/setup-osd-file.yaml
 #
 - name: Set up file-backed OSD for Rook-Ceph
-  hosts: kube_node
+  hosts: rook_loop_osd
   become: true
   vars:
     osd_size_gb: 150
